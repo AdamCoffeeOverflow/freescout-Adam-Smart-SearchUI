@@ -1,0 +1,278 @@
+/* Inline (always-visible) topbar search — positioned via JS next to notifications */
+.adamsmartsearchui-inline {
+  padding: 0;
+}
+
+.adamsmartsearchui-inline .adamsmartsearchui-inline-form {
+  margin: 8px 6px 0 6px;
+  position: relative; /* anchor dropdown to the exact input-group width */
+}
+
+.adamsmartsearchui-inline .adamsmartsearchui-inline-input {
+  width: 210px;
+  transition: box-shadow 140ms ease, opacity 140ms ease;
+  /* input-group overrides border radius; re-apply below with more specific rules */
+  border-radius: 999px;
+}
+
+/* Make the whole search pill fully rounded (both edges), including the button */
+.adamsmartsearchui-inline .input-group > .form-control.adamsmartsearchui-inline-input {
+  border-top-left-radius: 999px;
+  border-bottom-left-radius: 999px;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+/* With multiple buttons, only round the outer edge of the last one. */
+.adamsmartsearchui-inline .input-group-btn > .btn {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.adamsmartsearchui-inline .input-group-btn > .btn:not(:last-child) {
+
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.adamsmartsearchui-inline .input-group-btn > .btn:last-child {
+  border-top-right-radius: 999px;
+  border-bottom-right-radius: 999px;
+}
+
+/* Keep icon buttons visually consistent (magnifier + ⋮) */
+.adamsmartsearchui-inline .input-group-btn > .btn.adamsmartsearchui-search-btn,
+.adamsmartsearchui-inline .input-group-btn > .btn.adamsmartsearchui-more {
+  min-width: 32px;
+  padding-left: 0;
+  padding-right: 0;
+  text-align: center;
+}
+
+
+/* Magnifier is intentionally not a submit affordance.
+   Keep button background identical to ⋮ by applying opacity to the icon only. */
+.adamsmartsearchui-inline .input-group-btn > .btn.adamsmartsearchui-search-btn i {
+  opacity: 0.7;
+}
+
+.adamsmartsearchui-inline .input-group-btn > .btn.adamsmartsearchui-search-btn:hover i,
+.adamsmartsearchui-inline .input-group-btn > .btn.adamsmartsearchui-search-btn:focus i {
+  opacity: 0.85;
+}
+
+.adamsmartsearchui-inline .input-group-btn > .btn:focus,
+.adamsmartsearchui-inline .input-group-btn > .btn:active {
+  outline: none;
+}
+
+.adamsmartsearchui-inline .adamsmartsearchui-inline-input:focus {
+  opacity: 1;
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.18);
+}
+
+/* Suggestions dropdown */
+.adamsmartsearchui-inline {
+  position: relative;
+}
+
+.adamsmartsearchui-inline .adamsmartsearchui-suggest {
+  /* Bootstrap's .dropdown-menu may set left/top; force alignment with our inline form */
+  left: 0 !important;
+  right: 0 !important;
+  top: 100% !important;
+  margin-top: 6px;
+  max-height: 320px;
+  overflow: auto;
+  padding: 6px 0;
+  border-radius: 10px;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.16);
+  z-index: 1060; /* above navbar items */
+}
+
+.adamsmartsearchui-suggest-head {
+  padding: 6px 12px;
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.adamsmartsearchui-suggest-sep {
+  height: 1px;
+  margin: 6px 0;
+  background: rgba(0,0,0,0.08);
+}
+
+.adamsmartsearchui-suggest-item {
+  display: flex;
+  gap: 8px;
+  padding: 7px 12px;
+  text-decoration: none;
+  white-space: normal;
+  overflow: hidden;
+}
+
+.adamsmartsearchui-suggest-item:hover,
+.adamsmartsearchui-suggest-item:focus,
+.adamsmartsearchui-suggest-item.active {
+  text-decoration: none;
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.adamsmartsearchui-suggest-num {
+  opacity: 0.75;
+  flex: 0 0 auto;
+  font-weight: 600;
+}
+
+/* "Search Smart for …" entry (always present when typing) */
+.adamsmartsearchui-suggest-searchall .adamsmartsearchui-suggest-subj {
+  font-weight: 600;
+}
+
+.adamsmartsearchui-suggest-hint {
+  flex: 0 0 auto;
+  opacity: 0.6;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.adamsmartsearchui-suggest-subj {
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.adamsmartsearchui-suggest-main {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.adamsmartsearchui-suggest-row1 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.adamsmartsearchui-suggest-row1 .adamsmartsearchui-suggest-subj {
+  white-space: nowrap;
+}
+
+.adamsmartsearchui-suggest-row2 {
+  display: block;
+  margin-top: 1px;
+  font-size: 12px;
+  opacity: 0.65;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.adamsmartsearchui-suggest-status {
+  flex: 0 0 auto;
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 999px;
+}
+
+/* Hover-to-expand dropdown (desktop only).
+   Expands to the LEFT by anchoring the right edge to the input group.
+   This improves scannability for long subjects without changing the default footprint. */
+@media (min-width: 992px) {
+  .adamsmartsearchui-inline .adamsmartsearchui-suggest.adamsmartsearchui-suggest-expandable:hover {
+    left: auto !important;
+    right: 0 !important;
+    width: 560px;
+    max-width: calc(100vw - 24px);
+  }
+
+  .adamsmartsearchui-inline .adamsmartsearchui-suggest.adamsmartsearchui-suggest-expandable:hover .adamsmartsearchui-suggest-item {
+    align-items: flex-start;
+  }
+
+  .adamsmartsearchui-inline .adamsmartsearchui-suggest.adamsmartsearchui-suggest-expandable:hover .adamsmartsearchui-suggest-row1 .adamsmartsearchui-suggest-subj,
+  .adamsmartsearchui-inline .adamsmartsearchui-suggest.adamsmartsearchui-suggest-expandable:hover .adamsmartsearchui-suggest-row2 {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
+}
+
+
+/* Highlight matched fragments in suggestions/results (kept subtle and theme-friendly). */
+.adamsmartsearchui-hl {
+  background: rgba(255, 235, 59, 0.55);
+  padding: 0 1px;
+  border-radius: 3px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .adamsmartsearchui-hl {
+    background: rgba(255, 235, 59, 0.25);
+  }
+}
+
+body.dark-mode .adamsmartsearchui-hl,
+body.theme-dark .adamsmartsearchui-hl {
+  background: rgba(255, 235, 59, 0.25);
+}
+
+/* Dark-mode friendliness: prefer system theme, and also support a future body class */
+@media (prefers-color-scheme: dark) {
+  .adamsmartsearchui-suggest {
+    background: #2b2f35;
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+
+  .adamsmartsearchui-suggest-item {
+    color: rgba(255, 255, 255, 0.92);
+  }
+
+  .adamsmartsearchui-suggest-item:hover,
+  .adamsmartsearchui-suggest-item:focus {
+    background: rgba(255, 255, 255, 0.08);
+  }
+}
+
+body.dark-mode .adamsmartsearchui-suggest,
+body.theme-dark .adamsmartsearchui-suggest {
+  background: #2b2f35;
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+body.dark-mode .adamsmartsearchui-suggest-item,
+body.theme-dark .adamsmartsearchui-suggest-item {
+  color: rgba(255, 255, 255, 0.92);
+}
+
+body.dark-mode .adamsmartsearchui-suggest-item:hover,
+body.dark-mode .adamsmartsearchui-suggest-item:focus,
+body.theme-dark .adamsmartsearchui-suggest-item:hover,
+body.theme-dark .adamsmartsearchui-suggest-item:focus {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* Tighten on smaller screens */
+@media (max-width: 991px) {
+  /* On tablet/mobile, avoid the cramped "pill". Let it breathe and stay readable. */
+  .adamsmartsearchui-inline .adamsmartsearchui-inline-form { margin: 8px 10px 0 10px; }
+  .adamsmartsearchui-inline .adamsmartsearchui-inline-input { width: 100%; }
+  .adamsmartsearchui-inline .input-group { width: 100%; }
+
+  /* Suggestions: keep them compact on mobile.
+     Show just the primary line (ID + Subject) and hide secondary/meta details. */
+  .adamsmartsearchui-inline .adamsmartsearchui-suggest { max-height: 50vh; }
+  .adamsmartsearchui-suggest-item { padding: 10px 12px; }
+  .adamsmartsearchui-suggest-row2 { display: none; }
+  .adamsmartsearchui-suggest-status { display: none; }
+  .adamsmartsearchui-suggest-hint { display: none; }
+}
+
+/* Hide on very small screens to avoid crowding */
+@media (max-width: 767px) {
+  .adamsmartsearchui-inline { display: none; }
+}
+
+.adamsmartsearch-results-meta {
+  margin: 15px 0;
+}
