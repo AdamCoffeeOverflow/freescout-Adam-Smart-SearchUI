@@ -1,24 +1,28 @@
 {
-    "name": "AdamSmartSearchUI",
-    "alias": "adamsmartsearchui",
-    "description": "Unified search UI (CustomFields compatible) with conversation-ID-first lookup, topbar quick search, and a recent-conversations default view.",
-    "version": "2.5.0",
-    "author": "AdamCoffeeOverflow",
-    "latestVersionUrl": "https://raw.githubusercontent.com/AdamCoffeeOverflow/freescout-Adam-Smart-SearchUI/main/version.txt",
-    "latestVersionZipUrl": "https://github.com/AdamCoffeeOverflow/freescout-Adam-Smart-SearchUI/releases/latest/download/AdamSmartSearchUI.zip"
-    "url": "https://github.com/AdamCoffeeOverflow/AdamSmartSearchUI",
-    "providers": [
-        "Modules\\AdamSmartSearchUI\\Providers\\AdamSmartSearchUIServiceProvider"
-    ],
-    "authorUrl": "https://github.com/AdamCoffeeOverflow",
-    "active": 0,
-    "order": 100,
-    "img": "/modules/adamsmartsearchui/img/smartsearchui-v112.png",
-    "update": {
-        "provider": "github",
-        "repository": "AdamCoffeeOverflow/AdamSmartSearchUI"
-    },
-    "files": [
-        "start.php"
-    ]
+  "name": "AdamSmartSearchUI",
+  "alias": "adamsmartsearchui",
+  "description": "Unified search UI (CustomFields compatible) with conversation-ID-first lookup, topbar quick search, and a recent-conversations default view.",
+  "version": "2.5.0",
+  "detailsUrl": "https://github.com/AdamCoffeeOverflow/freescout-Adam-Smart-SearchUI/releases",
+  "author": "AdamCoffeeOverflow",
+  "authorUrl": "https://github.com/AdamCoffeeOverflow",
+  "keywords": [
+    "search",
+    "ui",
+    "customfields",
+    "conversations"
+  ],
+  "active": 0,
+  "order": 100,
+  "providers": [
+    "Modules\\AdamSmartSearchUI\\Providers\\AdamSmartSearchUIServiceProvider"
+  ],
+  "aliases": {},
+  "files": [
+    "start.php"
+  ],
+  "requires": [],
+  "img": "/modules/adamsmartsearchui/img/smartsearchui-v112.png",
+  "latestVersionUrl": "https://raw.githubusercontent.com/AdamCoffeeOverflow/freescout-Adam-Smart-SearchUI/main/version.txt",
+  "latestVersionZipUrl": "https://github.com/AdamCoffeeOverflow/freescout-Adam-Smart-SearchUI/releases/latest/download/AdamSmartSearchUI.zip"
 }
