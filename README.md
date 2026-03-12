@@ -1,24 +1,28 @@
 # AdamSmartSearchUI
 
+<img width="256" height="256" alt="smartsearchui" src="https://github.com/user-attachments/assets/f9c1f420-5d34-44f1-878b-54e949dca84b" />
+
+
 Enhanced unified search module for FreeScout.
 
-Version: 1.2.0
-Author: AdamCoffeeOverflow  
-Author URL: https://github.com/AdamCoffeeOverflow  
+Version: 2.5.0
+Author: AdamCoffeeOverflow
 
 ## Features
+<img width="477" height="68" alt="image" src="https://github.com/user-attachments/assets/ac5b5581-0166-45cd-8414-817c7226ea3c" />
 
 - Exact numeric conversation search (conversation ID or thread ID)
 - Common wrappers supported (#123, [#123], (123))
 - Email search
 - Phone search
 - Customer name search
-- CustomFields search
+- CustomFields (Freescout Module Compatible) search
 - Optional status filter (Any / Open / Pending / Closed, etc.)
 - Optional folder filter (auto-hides if folders are not available in your FreeScout DB)
 - Mailbox permission-safe filtering
 - Performance-optimized queries
 - Multilingual UI (ships with English + French)
+<img width="1536" height="1024" alt="pic smart" src="https://github.com/user-attachments/assets/2e2e291e-b1b0-4872-b723-0a74ed7a431a" />
 
 ### UI enhancements
 
@@ -28,6 +32,7 @@ Author URL: https://github.com/AdamCoffeeOverflow
 - Lightweight autosuggest dropdown (permission-safe)
 - Small focus animation for intentional feel
 - Dark-mode friendly styles (prefers-color-scheme + future body classes)
+<img width="468" height="255" alt="image" src="https://github.com/user-attachments/assets/edbad90f-f7fb-4765-9287-bfb79d48d263" />
 
 ## Installation
 
@@ -42,7 +47,7 @@ If your FreeScout build supports module auto-updates, this module can be updated
 
 ## Compatibility
 
-- FreeScout >= 1.8.0
+- FreeScout >= 1.8.0+
 - CustomFields module
 
 ## License
@@ -51,4 +56,4 @@ AGPL-3.0
 
 
 ## Notes
-- Module icon is versioned (smartsearchui-v112.png) to avoid browser/proxy caching after upgrades.
+- happy searching!
