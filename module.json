@@ -4,6 +4,8 @@
     "description": "Unified search UI (CustomFields compatible) with conversation-ID-first lookup, topbar quick search, and a recent-conversations default view.",
     "version": "2.5.0",
     "author": "AdamCoffeeOverflow",
+    "latestVersionUrl": "https://raw.githubusercontent.com/AdamCoffeeOverflow/freescout-Adam-Smart-SearchUI/main/version.txt",
+    "latestVersionZipUrl": "https://github.com/AdamCoffeeOverflow/freescout-Adam-Smart-SearchUI/releases/latest/download/AdamSmartSearchUI.zip"
     "url": "https://github.com/AdamCoffeeOverflow/AdamSmartSearchUI",
     "providers": [
         "Modules\\AdamSmartSearchUI\\Providers\\AdamSmartSearchUIServiceProvider"
