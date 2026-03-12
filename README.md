@@ -42,12 +42,13 @@ Author: AdamCoffeeOverflow
 - Dark-mode friendly styles (prefers-color-scheme + future body classes)
 <img width="468" height="255" alt="image" src="https://github.com/user-attachments/assets/edbad90f-f7fb-4765-9287-bfb79d48d263" />
 
-## Installation
-
-1. Upload the module folder to:
-   Modules/AdamSmartSearchUI
-2. Activate via Manage → Modules
-3. Clear cache if needed
+## Install
+1. Download the **Release** Version for easy install (Do not download via **<> Code link**)
+2. Copy the module folder into your FreeScout instance:
+   - `Modules/AdamTicketAgingColors`
+3. Activate it in **Manage → Modules**.
+4. (Optional) clear caches:
+   - `php artisan cache:clear`
 
 ## Updates
 
