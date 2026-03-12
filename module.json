@@ -2,7 +2,7 @@
     "name": "AdamSmartSearchUI",
     "alias": "adamsmartsearchui",
     "description": "Unified search UI (CustomFields compatible) with conversation-ID-first lookup, topbar quick search, and a recent-conversations default view.",
-    "version": "1.2.4",
+    "version": "2.5.0",
     "author": "AdamCoffeeOverflow",
     "url": "https://github.com/AdamCoffeeOverflow/AdamSmartSearchUI",
     "providers": [
