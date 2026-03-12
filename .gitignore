@@ -1,0 +1,17 @@
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Logs
+*.log
+
+# Archives
+*.zip
+
+# PHP / Laravel
+vendor/
+
+# Env
+.env

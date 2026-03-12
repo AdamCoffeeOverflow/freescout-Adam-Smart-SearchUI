@@ -1,11 +1,31 @@
+/* Inline navbar placement hotfix: align the custom search LI to the navbar height */
+.navbar-nav > li#adamsmartsearchui-inline-li,
+.navbar-nav > li.adamsmartsearchui-inline {
+  display: flex !important;
+  align-items: center;
+  height: 50px;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.navbar-nav > li#adamsmartsearchui-inline-li > .adamsmartsearchui-inline-form,
+.navbar-nav > li.adamsmartsearchui-inline > .adamsmartsearchui-inline-form {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
 /* Inline (always-visible) topbar search — positioned via JS next to notifications */
 .adamsmartsearchui-inline {
   padding: 0;
+  display: flex;
+  align-items: center;
 }
 
 .adamsmartsearchui-inline .adamsmartsearchui-inline-form {
-  margin: 8px 6px 0 6px;
+  margin: 0 6px;
   position: relative; /* anchor dropdown to the exact input-group width */
+  display: flex;
+  align-items: center;
 }
 
 .adamsmartsearchui-inline .adamsmartsearchui-inline-input {
@@ -276,3 +296,7 @@ body.theme-dark .adamsmartsearchui-suggest-item:focus {
 .adamsmartsearch-results-meta {
   margin: 15px 0;
 }
+
+.adamsmartsearchui-col-conversation { width: 180px; }
+.adamsmartsearchui-col-field { width: 220px; }
+.adamsmartsearchui-col-status { width: 120px; }

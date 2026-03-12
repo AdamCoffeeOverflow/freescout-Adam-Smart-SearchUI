@@ -15,7 +15,7 @@ return new class extends Migration
      * - We keep names module-scoped to avoid collisions.
      * - Safe no-op on non-MySQL drivers (SQLite/Postgres) to maximize compatibility.
      */
-    public function up(): void
+    public function up()
     {
         if (!Schema::hasTable('conversations')) {
             return;
@@ -32,9 +32,11 @@ return new class extends Migration
             return;
         }
 
+        // Keep compatibility with older releases which used different index names.
         $indexName = 'adamsmartsearchui_mailbox_updated';
+        $legacyIndexName = 'idx_conversations_mailbox_updated';
 
-        if ($this->indexExists('conversations', $indexName)) {
+        if ($this->indexExists('conversations', $indexName) || $this->indexExists('conversations', $legacyIndexName)) {
             return;
         }
 
@@ -44,7 +46,7 @@ return new class extends Migration
         });
     }
 
-    public function down(): void
+    public function down()
     {
         if (!Schema::hasTable('conversations')) {
             return;
@@ -71,10 +73,11 @@ return new class extends Migration
         });
     }
 
-    private function indexExists(string $table, string $indexName): bool
+    private function indexExists(string $table, string $indexName)
     {
         try {
-            $rows = DB::select("SHOW INDEX FROM `{$table}` WHERE Key_name = '{$indexName}'");
+            // Use bindings to avoid SQL injection even though index names are controlled.
+            $rows = DB::select("SHOW INDEX FROM `{$table}` WHERE Key_name = ?", [$indexName]);
             return !empty($rows);
         } catch (\Throwable $e) {
             return false;

@@ -2,7 +2,7 @@
 
 Enhanced unified search module for FreeScout.
 
-Version: 2.4.1  
+Version: 1.2.0
 Author: AdamCoffeeOverflow  
 Author URL: https://github.com/AdamCoffeeOverflow  
 
@@ -14,9 +14,11 @@ Author URL: https://github.com/AdamCoffeeOverflow
 - Phone search
 - Customer name search
 - CustomFields search
-- Includes closed conversations (no status filtering)
+- Optional status filter (Any / Open / Pending / Closed, etc.)
+- Optional folder filter (auto-hides if folders are not available in your FreeScout DB)
 - Mailbox permission-safe filtering
 - Performance-optimized queries
+- Multilingual UI (ships with English + French)
 
 ### UI enhancements
 
@@ -33,6 +35,10 @@ Author URL: https://github.com/AdamCoffeeOverflow
    Modules/AdamSmartSearchUI
 2. Activate via Manage → Modules
 3. Clear cache if needed
+
+## Updates
+
+If your FreeScout build supports module auto-updates, this module can be updated via GitHub releases.
 
 ## Compatibility
 

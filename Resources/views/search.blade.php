@@ -1,10 +1,10 @@
 @extends('layouts.app')
 
-@section('title', __('Search'))
+@section('title', __('adamsmartsearchui::messages.page_title'))
 
 @section('content')
 <div class="container">
-	<h2 class="page-heading">{{ __('Smart Search') }}</h2>
+	<h2 class="page-heading">{{ __('adamsmartsearchui::messages.heading') }}</h2>
 
     @if ($error)
         <div class="alert alert-danger">{{ $error }}</div>
@@ -14,28 +14,28 @@
 		<div class="panel-body">
 			<form method="GET" action="{{ route('adamsmartsearchui.search') }}" class="form-horizontal adamsmartsearch-form">
         <div class="form-group">
-            <label class="col-sm-2 control-label">{{ __('Query') }}</label>
+            <label class="col-sm-2 control-label">{{ __('adamsmartsearchui::messages.query') }}</label>
             <div class="col-sm-10">
-				<input type="text" class="form-control" name="q" value="{{ $q }}" placeholder="{{ __('Search conversations, customers, custom fields…') }}" autofocus>
-				<p class="help-block">{{ __('Tip: type #1234 to jump to a conversation (conversation/thread ID).') }}</p>
+				<input type="text" class="form-control" name="q" value="{{ $q }}" placeholder="{{ __('adamsmartsearchui::messages.query_placeholder') }}" autofocus>
+				<p class="help-block">{{ __('adamsmartsearchui::messages.query_tip') }}</p>
             </div>
         </div>
 
         <div class="form-group">
-            <label class="col-sm-2 control-label">{{ __('Mailbox') }}</label>
+            <label class="col-sm-2 control-label">{{ __('adamsmartsearchui::messages.mailbox') }}</label>
             <div class="col-sm-4">
                 <select class="form-control" name="mailbox_id">
-                    <option value="0">{{ __('All accessible mailboxes') }}</option>
+                    <option value="0">{{ __('adamsmartsearchui::messages.all_accessible_mailboxes') }}</option>
                     @foreach (Auth::user()->mailboxesCanView(true) as $mb)
                         <option value="{{ $mb->id }}" @if($mailboxId == $mb->id) selected @endif>{{ $mb->name }}</option>
                     @endforeach
                 </select>
             </div>
 
-            <label class="col-sm-2 control-label">{{ __('Field') }}</label>
+            <label class="col-sm-2 control-label">{{ __('adamsmartsearchui::messages.field') }}</label>
             <div class="col-sm-4">
                 <select class="form-control" name="field_id">
-                    <option value="0">{{ __('Any custom field') }}</option>
+                    <option value="0">{{ __('adamsmartsearchui::messages.any_custom_field') }}</option>
                     @foreach ($fields as $f)
                         <option value="{{ $f['id'] }}" @if($fieldId == $f['id']) selected @endif>{{ $f['name'] }}</option>
                     @endforeach
@@ -44,20 +44,44 @@
         </div>
 
         <div class="form-group">
-            <label class="col-sm-2 control-label">{{ __('Sort') }}</label>
+            <label class="col-sm-2 control-label">{{ __('adamsmartsearchui::messages.sort') }}</label>
             <div class="col-sm-4">
                 <select class="form-control" name="sort">
-                    <option value="updated_desc" @if(($sort ?? 'updated_desc') === 'updated_desc') selected @endif>{{ __('Updated: newest') }}</option>
-                    <option value="updated_asc" @if(($sort ?? 'updated_desc') === 'updated_asc') selected @endif>{{ __('Updated: oldest') }}</option>
-                    <option value="id_desc" @if(($sort ?? 'updated_desc') === 'id_desc') selected @endif>{{ __('Ticket #: highest') }}</option>
-                    <option value="id_asc" @if(($sort ?? 'updated_desc') === 'id_asc') selected @endif>{{ __('Ticket #: lowest') }}</option>
+                    <option value="updated_desc" @if(($sort ?? 'updated_desc') === 'updated_desc') selected @endif>{{ __('adamsmartsearchui::messages.updated_newest') }}</option>
+                    <option value="updated_asc" @if(($sort ?? 'updated_desc') === 'updated_asc') selected @endif>{{ __('adamsmartsearchui::messages.updated_oldest') }}</option>
+                    <option value="id_desc" @if(($sort ?? 'updated_desc') === 'id_desc') selected @endif>{{ __('adamsmartsearchui::messages.ticket_highest') }}</option>
+                    <option value="id_asc" @if(($sort ?? 'updated_desc') === 'id_asc') selected @endif>{{ __('adamsmartsearchui::messages.ticket_lowest') }}</option>
+                </select>
+            </div>
+
+            <label class="col-sm-2 control-label">{{ __('adamsmartsearchui::messages.status') }}</label>
+            <div class="col-sm-4">
+                <select class="form-control" name="status">
+                    <option value="-1" @if(($status ?? -1) === -1) selected @endif>{{ __('adamsmartsearchui::messages.any_status') }}</option>
+                    @foreach (($statusOptions ?? []) as $code => $label)
+                        <option value="{{ $code }}" @if((int)($status ?? -1) === (int)$code) selected @endif>{{ $label }}</option>
+                    @endforeach
                 </select>
             </div>
         </div>
 
+        @if (!empty($foldersOk) && !empty($folders) && is_array($folders))
+            <div class="form-group">
+                <label class="col-sm-2 control-label">{{ __('adamsmartsearchui::messages.folder') }}</label>
+                <div class="col-sm-4">
+                    <select class="form-control" name="folder_id">
+                        <option value="0" @if((int)($folderId ?? 0) === 0) selected @endif>{{ __('adamsmartsearchui::messages.any_folder') }}</option>
+                        @foreach ($folders as $f)
+                            <option value="{{ $f['id'] }}" @if((int)($folderId ?? 0) === (int)$f['id']) selected @endif>{{ $f['name'] }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+        @endif
+
         <div class="form-group">
             <div class="col-sm-offset-2 col-sm-10">
-                <button type="submit" class="btn btn-primary">{{ __('Search') }}</button>
+                <button type="submit" class="btn btn-primary">{{ __('adamsmartsearchui::messages.search') }}</button>
             </div>
         </div>
 			</form>
@@ -65,24 +89,24 @@
 	</div>
 
     @if ($q && mb_strlen($q) < (int)config('adamsmartsearchui.min_query_len', 2))
-        <div class="alert alert-warning">{{ __('Query is too short.') }}</div>
+        <div class="alert alert-warning">{{ __('adamsmartsearchui::messages.query_too_short') }}</div>
     @endif
 
     @if (!$error && ($q || ($mode ?? '') === 'recent'))
         <div class="adamsmartsearch-results-meta">
             @if (($mode ?? '') === 'recent')
-                <strong>{{ __('Recent conversations') }}</strong>
+                <strong>{{ __('adamsmartsearchui::messages.recent_conversations') }}</strong>
                 <span class="text-muted">&mdash; {{ $total }} total</span>
             @else
-                <strong>{{ $total }}</strong> result(s)
+                <strong>{{ $total }}</strong> {{ trans_choice('adamsmartsearchui::messages.results_count_text', (int)$total) }}
                 @if ($total > 0)
-                    <span class="text-muted">(showing {{ count($results) }} on this page)</span>
+                    <span class="text-muted">{{ __('adamsmartsearchui::messages.showing_on_page', ['count' => count($results)]) }}</span>
                 @endif
             @endif
         </div>
 
 		@if (!count($results) && ($mode ?? '') !== 'recent' && mb_strlen($q) >= (int)config('adamsmartsearchui.min_query_len', 2))
-			<div class="alert alert-info">{{ __('No matching conversations found.') }}</div>
+			<div class="alert alert-info">{{ __('adamsmartsearchui::messages.no_matches') }}</div>
 		@endif
 
         @if (count($results))
@@ -97,13 +121,16 @@
 			<table class="table table-striped table-hover">
                 <thead>
                     <tr>
-					<th style="width: 180px">
-                            <a href="{{ route('adamsmartsearchui.search', array_merge($baseSort, ['sort' => $nextSortId])) }}">{{ __('Conversation') }}{!! e($idArrow) !!}</a>
+					<th class="adamsmartsearchui-col-conversation">
+                            <a href="{{ route('adamsmartsearchui.search', array_merge($baseSort, ['sort' => $nextSortId])) }}">{{ __('adamsmartsearchui::messages.conversation') }}{{ $idArrow }}</a>
                         </th>
-                        <th>{{ __('Subject') }}</th>
-                        <th style="width: 120px">{{ __('Status') }}</th>
+                        <th>{{ __('adamsmartsearchui::messages.subject') }}</th>
+                        @if ($fieldId && !empty($selectedField))
+                            <th class="adamsmartsearchui-col-field">{{ $selectedField['name'] }}</th>
+                        @endif
+					<th class="adamsmartsearchui-col-status">{{ __('adamsmartsearchui::messages.status') }}</th>
 					<th>
-                            <a href="{{ route('adamsmartsearchui.search', array_merge($baseSort, ['sort' => $nextSortUpdated])) }}">{{ __('Updated') }}{!! e($updatedArrow) !!}</a>
+                            <a href="{{ route('adamsmartsearchui.search', array_merge($baseSort, ['sort' => $nextSortUpdated])) }}">{{ __('adamsmartsearchui::messages.updated') }}{{ $updatedArrow }}</a>
                         </th>
                     </tr>
                 </thead>
@@ -114,17 +141,30 @@
                     @endphp
                     @foreach ($results as $r)
                         <tr>
-						<td style="width: 180px">
+						<td class="adamsmartsearchui-col-conversation">
 							<a href="{{ route('conversations.view', ['id' => $r['id']]) }}">#{{ $r['id'] }}</a>
 						</td>
 						@php
-                                $subj_escaped = e((string)($r['subject'] ?? ''));
+                                $subject_raw = (string)($r['subject'] ?? '');
+                                $subject_parts = [$subject_raw];
                                 if ($q_re && mb_strlen($q_trim) >= 2) {
-                                    // Highlight inside escaped HTML.
-                                    $subj_escaped = preg_replace($q_re, '<span class="adamsmartsearchui-hl">$1</span>', $subj_escaped);
+                                    $subject_parts = preg_split($q_re, $subject_raw, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY) ?: [$subject_raw];
                                 }
                             @endphp
-						<td><a href="{{ route('conversations.view', ['id' => $r['id']]) }}">{!! $subj_escaped !!}</a></td>
+						<td>
+                                <a href="{{ route('conversations.view', ['id' => $r['id']]) }}">
+                                    @foreach ($subject_parts as $subject_part)
+                                        @if ($q_re && preg_match($q_re, $subject_part))
+                                            <span class="adamsmartsearchui-hl">{{ $subject_part }}</span>
+                                        @else
+                                            {{ $subject_part }}
+                                        @endif
+                                    @endforeach
+                                </a>
+                            </td>
+                            @if ($fieldId && !empty($selectedField))
+                                <td>{{ $r['field_value'] ?? '' }}</td>
+                            @endif
                             <td>
                                 @php
                                     $status_id = (int)($r['status'] ?? 0);
@@ -137,7 +177,7 @@
                                     <span class="label label-{{ $status_class }}">{{ $status_name }}</span>
                                 @endif
                             </td>
-                            <td>{{ $r['updated_at'] }}</td>
+                            <td>{{ \App\User::dateFormat($r['updated_at'], 'Y-m-d H:i') }}</td>
                         </tr>
                     @endforeach
                 </tbody>
@@ -152,16 +192,16 @@
                 <ul class="pager">
                     <li class="previous @if(!$hasPrev) disabled @endif">
                         @if($hasPrev)
-                            <a href="{{ route('adamsmartsearchui.search', array_merge($base, ['page' => $page-1])) }}">&larr; Prev</a>
+							<a href="{{ route('adamsmartsearchui.search', array_merge($base, ['page' => $page-1])) }}">&larr; {{ __('adamsmartsearchui::messages.prev') }}</a>
                         @else
-                            <a href="#" onclick="return false;">&larr; Prev</a>
+							<span class="text-muted">&larr; {{ __('adamsmartsearchui::messages.prev') }}</span>
                         @endif
                     </li>
                     <li class="next @if(!$hasNext) disabled @endif">
                         @if($hasNext)
-                            <a href="{{ route('adamsmartsearchui.search', array_merge($base, ['page' => $page+1])) }}">Next &rarr;</a>
+							<a href="{{ route('adamsmartsearchui.search', array_merge($base, ['page' => $page+1])) }}">{{ __('adamsmartsearchui::messages.next') }} &rarr;</a>
                         @else
-                            <a href="#" onclick="return false;">Next &rarr;</a>
+							<span class="text-muted">{{ __('adamsmartsearchui::messages.next') }} &rarr;</span>
                         @endif
                     </li>
                 </ul>
