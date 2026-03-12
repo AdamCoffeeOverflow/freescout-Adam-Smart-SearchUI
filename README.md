@@ -45,7 +45,7 @@ Author: AdamCoffeeOverflow
 ## Install
 1. Download the **Release** Version for easy install (Do not download via **<> Code link**)
 2. Copy the module folder into your FreeScout instance:
-   - `Modules/AdamTicketAgingColors`
+   - `Modules/AdamSmartSearchUI`
 3. Activate it in **Manage → Modules**.
 4. (Optional) clear caches:
    - `php artisan cache:clear`
