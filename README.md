@@ -43,7 +43,7 @@ Author: AdamCoffeeOverflow
 
 ## Updates
 
-If your FreeScout build supports module auto-updates, this module can be updated via GitHub releases.
+This module can be updated in Freescout module page (if available), for future GitHub releases.
 
 ## Compatibility
 
