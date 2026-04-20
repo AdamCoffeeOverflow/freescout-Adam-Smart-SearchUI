@@ -910,9 +910,11 @@ class SmartSearchController extends Controller
                 ]], 1];
             }
 
-            // Strict numeric query with no deterministic hit: do NOT fall back to LIKE-based search,
-            // as it can return unrelated conversations containing the digits.
-            return [[], 0];
+            // Compatibility fallback:
+            // if the numeric input is not an actual conversation/thread ID,
+            // continue into the normal LIKE-based search so order numbers or
+            // other numeric values present in the conversation subject/title,
+            // preview, email, customer data, or custom fields still match.
         }
 
         $cfExistsSql = $cfOk ? "EXISTS (\n                    SELECT 1 FROM conversation_custom_field ccf\n                    WHERE ccf.conversation_id = c.id\n                      AND ccf.value $op ?\n                )" : "0=1";

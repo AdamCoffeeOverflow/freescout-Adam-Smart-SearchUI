@@ -5,21 +5,13 @@
 
 Enhanced unified search module for FreeScout.
 
-Version: 2.5.0
+Version: 2.5.1
 Author: AdamCoffeeOverflow
-
-<a href="https://www.buymeacoffee.com/AdamOverflow" target="_blank" rel="noopener noreferrer">
-  <img
-    src="https://img.buymeacoffee.com/button-api/?text=Buy%20me%20coffee!&emoji=%E2%98%95&slug=AdamOverflow&button_colour=FF5F5F&font_colour=ffffff&font_family=Inter&outline_colour=000000&coffee_colour=FFDD00"
-    alt="Buy me a coffee"
-  />
-</a>
-
 
 ## Features
 <img width="477" height="68" alt="image" src="https://github.com/user-attachments/assets/ac5b5581-0166-45cd-8414-817c7226ea3c" />
 
-- Exact numeric conversation search (conversation ID or thread ID)
+- Exact numeric conversation search (conversation ID or thread ID), with fallback to regular search when no exact ID match exists
 - Common wrappers supported (#123, [#123], (123))
 - Email search
 - Phone search
@@ -42,13 +34,12 @@ Author: AdamCoffeeOverflow
 - Dark-mode friendly styles (prefers-color-scheme + future body classes)
 <img width="468" height="255" alt="image" src="https://github.com/user-attachments/assets/edbad90f-f7fb-4765-9287-bfb79d48d263" />
 
-## Install
-1. Download the **Release** Version for easy install (Do not download via **<> Code link**)
-2. Copy the module folder into your FreeScout instance:
-   - `Modules/AdamSmartSearchUI`
-3. Activate it in **Manage → Modules**.
-4. (Optional) clear caches:
-   - `php artisan cache:clear`
+## Installation
+
+1. Upload the module folder to:
+   Modules/AdamSmartSearchUI
+2. Activate via Manage → Modules
+3. Clear cache if needed
 
 ## Updates
 
