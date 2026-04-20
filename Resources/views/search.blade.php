@@ -65,8 +65,8 @@
             </div>
         </div>
 
-        @if (!empty($foldersOk) && !empty($folders) && is_array($folders))
-            <div class="form-group">
+        <div class="form-group">
+            @if (!empty($foldersOk) && !empty($folders) && is_array($folders))
                 <label class="col-sm-2 control-label">{{ __('adamsmartsearchui::messages.folder') }}</label>
                 <div class="col-sm-4">
                     <select class="form-control" name="folder_id">
@@ -76,8 +76,26 @@
                         @endforeach
                     </select>
                 </div>
+            @else
+                <label class="col-sm-2 control-label">{{ __('adamsmartsearchui::messages.folder') }}</label>
+                <div class="col-sm-4">
+                    <select class="form-control" name="folder_id" disabled>
+                        <option value="0">{{ __('adamsmartsearchui::messages.any_folder') }}</option>
+                    </select>
+                </div>
+            @endif
+
+            <label class="col-sm-2 control-label">{{ __('adamsmartsearchui::messages.assignee') }}</label>
+            <div class="col-sm-4">
+                <select class="form-control" name="assignee_id">
+                    <option value="0" @if((int)($assigneeId ?? 0) === 0) selected @endif>{{ __('adamsmartsearchui::messages.any_assignee') }}</option>
+                    <option value="-1" @if((int)($assigneeId ?? 0) === -1) selected @endif>{{ __('adamsmartsearchui::messages.unassigned') }}</option>
+                    @foreach (($assignees ?? []) as $assignee)
+                        <option value="{{ $assignee['id'] }}" @if((int)($assigneeId ?? 0) === (int)$assignee['id']) selected @endif>{{ $assignee['name'] }}</option>
+                    @endforeach
+                </select>
             </div>
-        @endif
+        </div>
 
         <div class="form-group">
             <div class="col-sm-offset-2 col-sm-10">

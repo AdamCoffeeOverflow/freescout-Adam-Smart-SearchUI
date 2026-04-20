@@ -30,6 +30,10 @@ return [
     'folder' => 'Folder',
     'any_folder' => 'Any folder',
 
+    'assignee' => 'Assignee',
+    'any_assignee' => 'Any assignee',
+    'unassigned' => 'Unassigned',
+
     'search' => 'Search',
 
     // Meta / Results

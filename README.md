@@ -5,7 +5,7 @@
 
 Enhanced unified search module for FreeScout.
 
-Version: 2.5.1
+Version: 2.6.0
 Author: AdamCoffeeOverflow
 
 ## Features
@@ -19,6 +19,7 @@ Author: AdamCoffeeOverflow
 - CustomFields (Freescout Module Compatible) search
 - Optional status filter (Any / Open / Pending / Closed, etc.)
 - Optional folder filter (auto-hides if folders are not available in your FreeScout DB)
+- Optional assignee filter (including Unassigned) on the Smart Search page
 - Mailbox permission-safe filtering
 - Performance-optimized queries
 - Multilingual UI (ships with English + French)

@@ -30,6 +30,10 @@ return [
     'folder' => 'Dossier',
     'any_folder' => 'Tous les dossiers',
 
+    'assignee' => 'Attribué à',
+    'any_assignee' => 'Tous les assignés',
+    'unassigned' => 'Non attribué',
+
     'search' => 'Rechercher',
 
     // Meta / Results
@@ -38,6 +42,7 @@ return [
 
     // :count is expected to be HTML.
     'results_count_html' => '{1} :count résultat|[2,*] :count résultats',
+    'results_count_text' => '{1} résultat|[2,*] résultats',
 
     'showing_on_page' => '(affichage de :count sur cette page)',
     'no_matches' => 'Aucune conversation correspondante trouvée.',

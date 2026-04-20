@@ -1,8 +1,8 @@
 {
   "name": "AdamSmartSearchUI",
   "alias": "adamsmartsearchui",
-  "description": "Unified search UI (CustomFields compatible) with exact conversation-ID-first lookup plus numeric fallback to subject/title and other fields.",
-  "version": "2.5.1",
+  "description": "Unified search UI (CustomFields compatible) with exact conversation-ID-first lookup, numeric fallback, and assignee filtering.",
+  "version": "2.6.0",
   "detailsUrl": "https://github.com/AdamCoffeeOverflow/freescout-Adam-Smart-SearchUI/releases",
   "author": "AdamCoffeeOverflow",
   "authorUrl": "https://github.com/AdamCoffeeOverflow",

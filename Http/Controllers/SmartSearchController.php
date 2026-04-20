@@ -30,10 +30,15 @@ class SmartSearchController extends Controller
         // -1 means "any"
         $status = (int)$request->get('status', -1);
         $folderId = (int)$request->get('folder_id', 0);
+        $assigneeId = (int)$request->get('assignee_id', 0);
         $sort = $this->normalizeSort((string)$request->get('sort', 'updated_desc'));
 
         $user = Auth::user();
         $allowedMailboxIds = $user ? $user->mailboxesIdsCanView() : [];
+        $forcedAssignedUserId = $this->getAssignedOnlyUserId($user);
+        if ($forcedAssignedUserId > 0) {
+            $assigneeId = $forcedAssignedUserId;
+        }
 
         // If user selected a mailbox they can't access, ignore it.
         if ($mailboxId && !in_array($mailboxId, $allowedMailboxIds)) {
@@ -65,6 +70,11 @@ class SmartSearchController extends Controller
             }
         } else {
             $folderId = 0;
+        }
+
+        $assignees = $this->loadAssignees($allowedMailboxIds, $mailboxId, $forcedAssignedUserId);
+        if (!$this->isValidAssigneeFilter($assigneeId, $assignees)) {
+            $assigneeId = $forcedAssignedUserId > 0 ? $forcedAssignedUserId : 0;
         }
 
         $schemaOk = $this->schemaOk();
@@ -117,11 +127,11 @@ class SmartSearchController extends Controller
         }
 
         if ($schemaOk && $q !== '' && mb_strlen($q) >= (int)config('adamsmartsearchui.min_query_len', 2)) {
-            [$results, $total] = $this->search($q, $allowedMailboxIds, $mailboxId, $fieldId, $status, $folderId, $page, $perPage, $sort);
+            [$results, $total] = $this->search($q, $allowedMailboxIds, $mailboxId, $fieldId, $status, $folderId, $assigneeId, $page, $perPage, $sort);
             $mode = 'search';
         } elseif ($schemaOk && $q === '') {
             // No query yet: show newest conversations as a useful default.
-            [$results, $total] = $this->recent($allowedMailboxIds, $mailboxId, $status, $folderId, $page, $perPage, $sort);
+            [$results, $total] = $this->recent($allowedMailboxIds, $mailboxId, $status, $folderId, $assigneeId, $page, $perPage, $sort);
             $mode = 'recent';
         }
 
@@ -145,6 +155,8 @@ class SmartSearchController extends Controller
             'folderId' => $folderId,
             'folders' => $folders,
             'foldersOk' => $foldersOk,
+            'assigneeId' => $assigneeId,
+            'assignees' => $assignees,
             'sort' => $sort,
             'fields' => $fields,
             'selectedField' => $selectedField,
@@ -156,7 +168,7 @@ class SmartSearchController extends Controller
     /**
      * Default listing when query is empty: newest conversations the user can access.
      */
-    protected function recent(array $allowedMailboxIds, int $mailboxId, int $status, int $folderId, int $page, int $perPage, string $sort = 'updated_desc')
+    protected function recent(array $allowedMailboxIds, int $mailboxId, int $status, int $folderId, int $assigneeId, int $page, int $perPage, string $sort = 'updated_desc')
     {
         if (!count($allowedMailboxIds)) {
             return [[], 0];
@@ -182,6 +194,12 @@ class SmartSearchController extends Controller
         if ($folderId) {
             $where .= " AND c.folder_id = ?";
             $bWhere[] = $folderId;
+        }
+        if ($assigneeId === -1) {
+            $where .= " AND (c.user_id IS NULL OR c.user_id <= 0)";
+        } elseif ($assigneeId > 0) {
+            $where .= " AND c.user_id = ?";
+            $bWhere[] = $assigneeId;
         }
 
         $total = 0;
@@ -236,6 +254,7 @@ class SmartSearchController extends Controller
 
             $user = Auth::user();
             $allowedMailboxIds = $user ? $user->mailboxesIdsCanView() : [];
+            $forcedAssignedUserId = $this->getAssignedOnlyUserId($user);
             if (!count($allowedMailboxIds)) {
                 return response()->json(['items' => []]);
             }
@@ -270,7 +289,7 @@ class SmartSearchController extends Controller
             // Keep it intentionally small and fast.
             $perPage = 8;
             // Always suggest newest first (deterministic UX).
-            [$results, $total] = $this->search($q, $allowedMailboxIds, $mailboxId, $fieldId, $status, $folderId, 1, $perPage, 'updated_desc');
+            [$results, $total] = $this->search($q, $allowedMailboxIds, $mailboxId, $fieldId, $status, $folderId, $forcedAssignedUserId, 1, $perPage, 'updated_desc');
 
             // Optional: hydrate selected custom field value for suggestions.
             if ($fieldId && $this->customFieldsOk() && count($results)) {
@@ -321,19 +340,26 @@ class SmartSearchController extends Controller
 
             $user = Auth::user();
             $allowedMailboxIds = $user ? $user->mailboxesIdsCanView() : [];
+            $forcedAssignedUserId = $this->getAssignedOnlyUserId($user);
             if (!count($allowedMailboxIds) || !$this->schemaOk()) {
                 return response()->json(['items' => []]);
             }
 
             $inIds = implode(',', array_fill(0, count($ids), '?'));
             $inMailbox = implode(',', array_fill(0, count($allowedMailboxIds), '?'));
+            $whereAssigned = '';
+            $bindings = array_merge($ids, $allowedMailboxIds);
+            if ($forcedAssignedUserId > 0) {
+                $whereAssigned = ' AND c.user_id = ?';
+                $bindings[] = $forcedAssignedUserId;
+            }
 
             $rows = DB::select(
                 "SELECT c.id, c.subject, c.mailbox_id, c.status, c.updated_at
                  FROM conversations c
                  WHERE c.id IN ($inIds)
-                   AND c.mailbox_id IN ($inMailbox)",
-                array_merge($ids, $allowedMailboxIds)
+                   AND c.mailbox_id IN ($inMailbox)".$whereAssigned,
+                $bindings
             );
 
             if (!count($rows)) {
@@ -760,6 +786,139 @@ class SmartSearchController extends Controller
         }
     }
 
+    protected function getAssignedOnlyUserId($user = null)
+    {
+        try {
+            if (!$user) {
+                $user = Auth::user();
+            }
+            if (!$user) {
+                return 0;
+            }
+
+            if ((method_exists($user, 'isAdmin') && $user->isAdmin()) || (int)($user->role ?? 0) === 1) {
+                return 0;
+            }
+
+            $raw = config('app.show_only_assigned_conversations');
+            if (($raw === null || $raw === '') && function_exists('getenv')) {
+                $raw = getenv('APP_SHOW_ONLY_ASSIGNED_CONVERSATIONS');
+            }
+            $raw = is_string($raw) ? trim($raw) : '';
+            if ($raw === '') {
+                return 0;
+            }
+
+            $ids = preg_split('/[^0-9]+/', $raw);
+            foreach ((array)$ids as $id) {
+                if ((int)$id === (int)($user->id ?? 0) && (int)$id > 0) {
+                    return (int)$id;
+                }
+            }
+        } catch (\Throwable $e) {
+            return 0;
+        }
+
+        return 0;
+    }
+
+    protected function formatAssigneeLabel($row)
+    {
+        $labelParts = [];
+        $firstName = trim((string)($row->first_name ?? ''));
+        $lastName = trim((string)($row->last_name ?? ''));
+        $email = trim((string)($row->email ?? ''));
+
+        $fullName = trim($firstName.' '.$lastName);
+        if ($fullName !== '') {
+            $labelParts[] = $fullName;
+        }
+        if ($email !== '') {
+            $labelParts[] = $email;
+        }
+
+        $label = implode(' — ', $labelParts);
+        if ($label === '') {
+            $label = '#'.((int)($row->id ?? 0));
+        }
+
+        return $label;
+    }
+
+    protected function isValidAssigneeFilter(int $assigneeId, array $assignees)
+    {
+        if ($assigneeId === 0 || $assigneeId === -1) {
+            return true;
+        }
+
+        foreach ($assignees as $assignee) {
+            if ((int)($assignee['id'] ?? 0) === $assigneeId) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    protected function loadAssignees(array $allowedMailboxIds, int $mailboxId = 0, int $forcedAssignedUserId = 0)
+    {
+        try {
+            $ids = $allowedMailboxIds;
+            if ($mailboxId) {
+                $ids = [$mailboxId];
+            }
+            $ids = array_values(array_unique(array_map('intval', $ids)));
+            if (!count($ids)) {
+                return [];
+            }
+
+            $in = implode(',', array_fill(0, count($ids), '?'));
+            $whereAssigned = '';
+            $bindings = $ids;
+            if ($forcedAssignedUserId > 0) {
+                $whereAssigned = "  AND c.user_id = ?\n";
+                $bindings[] = $forcedAssignedUserId;
+            }
+
+            $rows = DB::select(
+                "SELECT DISTINCT u.id, u.first_name, u.last_name, u.email\n".
+                "FROM conversations c\n".
+                "JOIN users u ON u.id = c.user_id\n".
+                "WHERE c.mailbox_id IN ($in)\n".
+                "  AND c.user_id IS NOT NULL\n".
+                "  AND c.user_id > 0\n".
+                $whereAssigned.
+                "ORDER BY u.first_name ASC, u.last_name ASC, u.email ASC",
+                $bindings
+            );
+
+            $out = [];
+            foreach ($rows as $row) {
+                $out[] = [
+                    'id' => (int)$row->id,
+                    'name' => $this->formatAssigneeLabel($row),
+                ];
+            }
+
+            if ($forcedAssignedUserId > 0 && !count($out)) {
+                $userRow = DB::selectOne(
+                    "SELECT id, first_name, last_name, email FROM users WHERE id = ? LIMIT 1",
+                    [$forcedAssignedUserId]
+                );
+                if ($userRow) {
+                    $out[] = [
+                        'id' => (int)$userRow->id,
+                        'name' => $this->formatAssigneeLabel($userRow),
+                    ];
+                }
+            }
+
+            return $out;
+        } catch (\Throwable $e) {
+            return [];
+        }
+    }
+
     /**
      * Append selected custom field values to results (single query, no N+1).
      */
@@ -866,7 +1025,7 @@ class SmartSearchController extends Controller
         }
     }
 
-    protected function search(string $q, array $allowedMailboxIds, int $mailboxId, int $fieldId, int $status, int $folderId, int $page, int $perPage, string $sort = 'updated_desc')
+    protected function search(string $q, array $allowedMailboxIds, int $mailboxId, int $fieldId, int $status, int $folderId, int $assigneeId, int $page, int $perPage, string $sort = 'updated_desc')
     {
         $offset = ($page - 1) * $perPage;
         $like = '%'.$q.'%';
@@ -937,6 +1096,12 @@ class SmartSearchController extends Controller
         if ($folderId) {
             $filterSql .= " AND c.folder_id = ?";
             $filterBindings[] = $folderId;
+        }
+        if ($assigneeId === -1) {
+            $filterSql .= " AND (c.user_id IS NULL OR c.user_id <= 0)";
+        } elseif ($assigneeId > 0) {
+            $filterSql .= " AND c.user_id = ?";
+            $filterBindings[] = $assigneeId;
         }
 
         // If a specific custom field is selected, restrict search to that field only.
