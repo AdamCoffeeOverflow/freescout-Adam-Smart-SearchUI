@@ -824,25 +824,20 @@ class SmartSearchController extends Controller
 
     protected function formatAssigneeLabel($row)
     {
-        $labelParts = [];
         $firstName = trim((string)($row->first_name ?? ''));
         $lastName = trim((string)($row->last_name ?? ''));
         $email = trim((string)($row->email ?? ''));
 
         $fullName = trim($firstName.' '.$lastName);
         if ($fullName !== '') {
-            $labelParts[] = $fullName;
+            return $fullName;
         }
+
         if ($email !== '') {
-            $labelParts[] = $email;
+            return $email;
         }
 
-        $label = implode(' — ', $labelParts);
-        if ($label === '') {
-            $label = '#'.((int)($row->id ?? 0));
-        }
-
-        return $label;
+        return '#'.((int)($row->id ?? 0));
     }
 
     protected function isValidAssigneeFilter(int $assigneeId, array $assignees)
