@@ -25,6 +25,7 @@ return [
     'ticket_lowest' => 'Ticket #: lowest',
 
     'status' => 'Status',
+    'deleted' => 'Deleted',
     'any_status' => 'Any status',
 
     'folder' => 'Folder',

@@ -25,6 +25,7 @@ return [
     'ticket_lowest' => 'Ticket # : plus bas',
 
     'status' => 'Statut',
+    'deleted' => 'Supprimé',
     'any_status' => 'Tous les statuts',
 
     'folder' => 'Dossier',

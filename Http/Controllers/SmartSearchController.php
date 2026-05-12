@@ -16,6 +16,7 @@ class SmartSearchController extends Controller
     public function index(Request $request)
     {
         $q = trim((string)$request->get('q', ''));
+        $q = $this->sanitizeSearchString($q);
         $page = max(1, (int)$request->get('page', 1));
         $perPage = (int)config('adamsmartsearchui.per_page', 50);
         if ($perPage < 10) {
@@ -117,7 +118,7 @@ class SmartSearchController extends Controller
                 }
                 if (count($ids)) {
                     $in = implode(',', array_fill(0, count($ids), '?'));
-                    $resolved = $this->resolveNumericConversation($numericTicket, $ids, $in);
+                    $resolved = $this->resolveNumericConversation($numericTicket, $ids, $in, $status, $folderId, $assigneeId);
                     if ($resolved !== null) {
                         $path = rtrim((string)\Helper::getSubdirectory(), '/').'/conversation/'.((int)$resolved['id']);
                         return redirect($path);
@@ -139,6 +140,10 @@ class SmartSearchController extends Controller
         // for the current results page (including "recent" mode).
         if ($fieldId && $cfOk && count($results)) {
             $results = $this->appendCustomFieldValues($results, $fieldId, $selectedField);
+        }
+
+        if (count($results)) {
+            $results = $this->appendStatusMeta($results);
         }
 
         return view('adamsmartsearchui::search', [
@@ -187,9 +192,10 @@ class SmartSearchController extends Controller
 
         $where = "c.mailbox_id IN ($in)";
         $bWhere = $ids;
-        if ($status !== -1) {
-            $where .= " AND c.status = ?";
-            $bWhere[] = $status;
+        $statusFilter = $this->buildStatusFilterSql($status);
+        if ($statusFilter['sql'] !== '') {
+            $where .= $statusFilter['sql'];
+            $bWhere = array_merge($bWhere, $statusFilter['bindings']);
         }
         if ($folderId) {
             $where .= " AND c.folder_id = ?";
@@ -214,7 +220,7 @@ class SmartSearchController extends Controller
         $orderBy = $this->sortToOrderBy($this->normalizeSort($sort));
         try {
             $rows = DB::select(
-                "SELECT c.id, c.subject, c.status, c.updated_at, c.mailbox_id
+                "SELECT c.id, c.subject, c.status, c.state, c.updated_at, c.mailbox_id
                  FROM conversations c
                  WHERE $where
                  ORDER BY $orderBy
@@ -231,6 +237,7 @@ class SmartSearchController extends Controller
                 'id' => (int)$r->id,
                 'subject' => (string)$r->subject,
                 'status' => (int)$r->status,
+                'state' => isset($r->state) ? (int)$r->state : 0,
                 'updated_at' => (string)$r->updated_at,
                 'mailbox_id' => (int)$r->mailbox_id,
             ];
@@ -247,6 +254,7 @@ class SmartSearchController extends Controller
     {
         try {
             $q = trim((string)$request->get('q', ''));
+            $q = $this->sanitizeSearchString($q);
             $minLen = (int)config('adamsmartsearchui.min_query_len', 2);
             if ($q === '' || mb_strlen($q) < $minLen) {
                 return response()->json(['items' => []]);
@@ -355,7 +363,7 @@ class SmartSearchController extends Controller
             }
 
             $rows = DB::select(
-                "SELECT c.id, c.subject, c.mailbox_id, c.status, c.updated_at
+                "SELECT c.id, c.subject, c.mailbox_id, c.status, c.state, c.updated_at
                  FROM conversations c
                  WHERE c.id IN ($inIds)
                    AND c.mailbox_id IN ($inMailbox)".$whereAssigned,
@@ -373,6 +381,7 @@ class SmartSearchController extends Controller
                     'subject' => (string)$r->subject,
                     'mailbox_id' => (int)$r->mailbox_id,
                     'status' => (int)$r->status,
+                    'state' => isset($r->state) ? (int)$r->state : 0,
                     'updated_at' => (string)$r->updated_at,
                 ];
             }
@@ -423,6 +432,7 @@ class SmartSearchController extends Controller
 
             $path = rtrim((string)\Helper::getSubdirectory(), '/').'/conversation/'.$id;
             $status = (int)($r['status'] ?? 0);
+            $state = (int)($r['state'] ?? 0);
             $mailboxId = (int)($r['mailbox_id'] ?? 0);
             $updatedAt = (string)($r['updated_at'] ?? '');
 
@@ -435,17 +445,9 @@ class SmartSearchController extends Controller
                 $updatedHuman = '';
             }
 
-            $statusName = '';
-            $statusClass = 'default';
-            try {
-                $statusName = (string)Conversation::statusCodeToName($status);
-                if (isset(Conversation::$status_classes[$status])) {
-                    $statusClass = (string)Conversation::$status_classes[$status];
-                }
-            } catch (\Throwable $e) {
-                $statusName = '';
-                $statusClass = 'default';
-            }
+            $badge = $this->getConversationBadgeMeta($status, $state);
+            $statusName = (string)($badge['name'] ?? '');
+            $statusClass = (string)($badge['class'] ?? 'default');
 
             $items[] = [
                 'id' => $id,
@@ -454,6 +456,7 @@ class SmartSearchController extends Controller
                 'mailbox_id' => $mailboxId,
                 'mailbox_name' => (string)($mailboxNames[$mailboxId] ?? ''),
                 'status' => $status,
+                'state' => $state,
                 'status_name' => $statusName,
                 'status_class' => $statusClass,
                 'updated_at' => $updatedAt,
@@ -505,6 +508,23 @@ class SmartSearchController extends Controller
                 'fields' => [],
             ]);
         }
+    }
+
+    protected function sanitizeSearchString($value)
+    {
+        $value = (string)$value;
+
+        try {
+            if (class_exists('Helper') && method_exists('Helper', 'sqlSanitizeString')) {
+                $value = \Helper::sqlSanitizeString($value);
+            } else {
+                $value = str_replace("\0", '', $value);
+            }
+        } catch (\Throwable $e) {
+            $value = str_replace("\0", '', $value);
+        }
+
+        return trim($value);
     }
 
     protected function customFieldDefinitionsOk()
@@ -638,8 +658,10 @@ class SmartSearchController extends Controller
             $out = [];
         }
 
-        // Keep stable order in UI.
+        // Keep stable order in UI, then append Deleted because it is a conversation state, not a status.
         ksort($out);
+        $out[$this->deletedStatusFilterValue()] = (string)__('adamsmartsearchui::messages.deleted');
+
         return $out;
     }
 
@@ -917,7 +939,7 @@ class SmartSearchController extends Controller
     /**
      * Append selected custom field values to results (single query, no N+1).
      */
-    protected function appendCustomFieldValues(array $results, int $fieldId, ?array $fieldMeta = null)
+    protected function appendCustomFieldValues(array $results, int $fieldId, $fieldMeta = null)
     {
         try {
             if (!$fieldId || !count($results)) {
@@ -1052,7 +1074,7 @@ class SmartSearchController extends Controller
         $numericTicket = $this->normalizeTicketNumberExact($q);
         $isStrictNumeric = (!$fieldId && $numericTicket !== null && $this->isStrictNumericQuery($q));
         if ($isStrictNumeric) {
-            $resolved = $this->resolveNumericConversation($numericTicket, $ids, $in);
+            $resolved = $this->resolveNumericConversation($numericTicket, $ids, $in, $status, $folderId, $assigneeId);
             if ($resolved !== null) {
                 // Deterministic hit: return a single conversation.
                 return [[[
@@ -1060,6 +1082,7 @@ class SmartSearchController extends Controller
                     'subject' => (string)$resolved['subject'],
                     'mailbox_id' => (int)$resolved['mailbox_id'],
                     'status' => (int)$resolved['status'],
+                    'state' => (int)($resolved['state'] ?? 0),
                     'updated_at' => (string)$resolved['updated_at'],
                 ]], 1];
             }
@@ -1084,9 +1107,10 @@ class SmartSearchController extends Controller
         // Optional filters (ANDed).
         $filterSql = '';
         $filterBindings = [];
-        if ($status !== -1) {
-            $filterSql .= " AND c.status = ?";
-            $filterBindings[] = $status;
+        $statusFilter = $this->buildStatusFilterSql($status);
+        if ($statusFilter['sql'] !== '') {
+            $filterSql .= $statusFilter['sql'];
+            $filterBindings = array_merge($filterBindings, $statusFilter['bindings']);
         }
         if ($folderId) {
             $filterSql .= " AND c.folder_id = ?";
@@ -1109,7 +1133,7 @@ class SmartSearchController extends Controller
                   AND ccf.custom_field_id = ?
                   AND ccf.value $op ?";
 
-            $sql = "SELECT DISTINCT c.id, c.subject, c.mailbox_id, c.status, c.updated_at
+            $sql = "SELECT DISTINCT c.id, c.subject, c.mailbox_id, c.status, c.state, c.updated_at
                 FROM conversations c
                 JOIN conversation_custom_field ccf ON ccf.conversation_id = c.id
                 WHERE c.mailbox_id IN ($in)
@@ -1157,7 +1181,7 @@ class SmartSearchController extends Controller
                 $whereSql
               )";
 
-        $sql = "SELECT DISTINCT c.id, c.subject, c.mailbox_id, c.status, c.updated_at
+        $sql = "SELECT DISTINCT c.id, c.subject, c.mailbox_id, c.status, c.state, c.updated_at
             FROM conversations c
             LEFT JOIN customers cu ON cu.id = c.customer_id
             WHERE c.mailbox_id IN ($in)
@@ -1218,26 +1242,21 @@ class SmartSearchController extends Controller
      *  1) conversations.id = N
      *  2) threads.id = N -> threads.conversation_id
      */
-    protected function resolveNumericConversation(int $n, array $mailboxIds, string $inPlaceholders)
+    protected function resolveNumericConversation(int $n, array $mailboxIds, string $inPlaceholders, int $status = -1, int $folderId = 0, int $assigneeId = 0)
     {
         try {
+            $filter = $this->buildExactConversationFilterSql($status, $folderId, $assigneeId);
+
             // 1) conversations.id
-            $row = DB::select(
-                "SELECT c.id, c.subject, c.mailbox_id, c.status, c.updated_at\n".
-                "FROM conversations c\n".
-                "WHERE c.mailbox_id IN ($inPlaceholders) AND c.id = ?\n".
-                "LIMIT 1",
-                array_merge($mailboxIds, [$n])
+            $row = $this->fetchExactConversationById(
+                $n,
+                $mailboxIds,
+                $inPlaceholders,
+                (string)$filter['sql'],
+                (array)$filter['bindings']
             );
-            if (!empty($row)) {
-                $r = $row[0];
-                return [
-                    'id' => (int)$r->id,
-                    'subject' => (string)$r->subject,
-                    'mailbox_id' => (int)$r->mailbox_id,
-                    'status' => (int)$r->status,
-                    'updated_at' => (string)$r->updated_at,
-                ];
+            if ($row !== null) {
+                return $row;
             }
 
             // 2) threads.id -> conversation_id
@@ -1251,23 +1270,13 @@ class SmartSearchController extends Controller
                 $t = DB::select("SELECT conversation_id FROM threads WHERE id = ? LIMIT 1", [$n]);
                 $cid = !empty($t) ? (int)($t[0]->conversation_id ?? 0) : 0;
                 if ($cid) {
-                    $row = DB::select(
-                        "SELECT c.id, c.subject, c.mailbox_id, c.status, c.updated_at\n".
-                        "FROM conversations c\n".
-                        "WHERE c.mailbox_id IN ($inPlaceholders) AND c.id = ?\n".
-                        "LIMIT 1",
-                        array_merge($mailboxIds, [$cid])
+                    return $this->fetchExactConversationById(
+                        $cid,
+                        $mailboxIds,
+                        $inPlaceholders,
+                        (string)$filter['sql'],
+                        (array)$filter['bindings']
                     );
-                    if (!empty($row)) {
-                        $r = $row[0];
-                        return [
-                            'id' => (int)$r->id,
-                            'subject' => (string)$r->subject,
-                            'mailbox_id' => (int)$r->mailbox_id,
-                            'status' => (int)$r->status,
-                            'updated_at' => (string)$r->updated_at,
-                        ];
-                    }
                 }
             }
         } catch (\Throwable $e) {
@@ -1275,6 +1284,146 @@ class SmartSearchController extends Controller
         }
 
         return null;
+    }
+
+    protected function buildExactConversationFilterSql(int $status, int $folderId, int $assigneeId)
+    {
+        $sql = '';
+        $bindings = [];
+
+        $statusFilter = $this->buildStatusFilterSql($status);
+        if ($statusFilter['sql'] !== '') {
+            $sql .= $statusFilter['sql'];
+            $bindings = array_merge($bindings, $statusFilter['bindings']);
+        }
+
+        if ($folderId) {
+            $sql .= ' AND c.folder_id = ?';
+            $bindings[] = $folderId;
+        }
+
+        if ($assigneeId === -1) {
+            $sql .= ' AND (c.user_id IS NULL OR c.user_id <= 0)';
+        } elseif ($assigneeId > 0) {
+            $sql .= ' AND c.user_id = ?';
+            $bindings[] = $assigneeId;
+        }
+
+        return [
+            'sql' => $sql,
+            'bindings' => $bindings,
+        ];
+    }
+
+    protected function fetchExactConversationById(int $conversationId, array $mailboxIds, string $inPlaceholders, string $extraSql = '', array $extraBindings = [])
+    {
+        $row = DB::select(
+            "SELECT c.id, c.subject, c.mailbox_id, c.status, c.state, c.updated_at\n".
+            "FROM conversations c\n".
+            "WHERE c.mailbox_id IN ($inPlaceholders) AND c.id = ?".$extraSql."\n".
+            "LIMIT 1",
+            array_merge($mailboxIds, [$conversationId], $extraBindings)
+        );
+
+        if (empty($row)) {
+            return null;
+        }
+
+        $r = $row[0];
+        return [
+            'id' => (int)$r->id,
+            'subject' => (string)$r->subject,
+            'mailbox_id' => (int)$r->mailbox_id,
+            'status' => (int)$r->status,
+            'state' => isset($r->state) ? (int)$r->state : 0,
+            'updated_at' => (string)$r->updated_at,
+        ];
+    }
+
+
+    protected function appendStatusMeta(array $results)
+    {
+        foreach ($results as $key => $row) {
+            $status = (int)($row['status'] ?? 0);
+            $state = (int)($row['state'] ?? 0);
+            $badge = $this->getConversationBadgeMeta($status, $state);
+
+            $results[$key]['status_name'] = (string)($badge['name'] ?? '');
+            $results[$key]['status_class'] = (string)($badge['class'] ?? 'default');
+        }
+
+        return $results;
+    }
+
+    protected function buildStatusFilterSql(int $status)
+    {
+        if ($status === -1) {
+            return ['sql' => '', 'bindings' => []];
+        }
+
+        $deletedState = $this->deletedStateValue();
+        if ($status === $this->deletedStatusFilterValue()) {
+            return [
+                'sql' => ' AND c.state = ?',
+                'bindings' => [$deletedState],
+            ];
+        }
+
+        return [
+            'sql' => ' AND c.status = ? AND (c.state IS NULL OR c.state <> ?)',
+            'bindings' => [$status, $deletedState],
+        ];
+    }
+
+    protected function deletedStatusFilterValue()
+    {
+        return -10;
+    }
+
+    protected function deletedStateValue()
+    {
+        $deletedState = 3;
+        try {
+            if (defined(Conversation::class.'::STATE_DELETED')) {
+                $deletedState = (int)constant(Conversation::class.'::STATE_DELETED');
+            }
+        } catch (\Throwable $e) {
+            $deletedState = 3;
+        }
+
+        return $deletedState;
+    }
+
+    protected function getConversationBadgeMeta(int $status, int $state = 0)
+    {
+        if ($this->isDeletedConversationState($state)) {
+            return [
+                'name' => (string)__('adamsmartsearchui::messages.deleted'),
+                'class' => 'danger',
+            ];
+        }
+
+        $statusName = '';
+        $statusClass = 'default';
+        try {
+            $statusName = (string)Conversation::statusCodeToName($status);
+            if (isset(Conversation::$status_classes[$status])) {
+                $statusClass = (string)Conversation::$status_classes[$status];
+            }
+        } catch (\Throwable $e) {
+            $statusName = '';
+            $statusClass = 'default';
+        }
+
+        return [
+            'name' => $statusName,
+            'class' => $statusClass,
+        ];
+    }
+
+    protected function isDeletedConversationState(int $state)
+    {
+        return $state > 0 && $state === $this->deletedStateValue();
     }
 
     protected function runSearch(string $countSql, string $sql, array $bindings)
@@ -1291,6 +1440,7 @@ class SmartSearchController extends Controller
                     'subject' => (string)$r->subject,
                     'mailbox_id' => (int)$r->mailbox_id,
                     'status' => (int)$r->status,
+                    'state' => isset($r->state) ? (int)$r->state : 0,
                     'updated_at' => (string)$r->updated_at,
                 ];
             }

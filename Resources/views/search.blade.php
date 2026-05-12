@@ -185,11 +185,26 @@
                             @endif
                             <td>
                                 @php
-                                    $status_id = (int)($r['status'] ?? 0);
-                                    $status_name = method_exists('App\\Conversation', 'statusCodeToName')
-                                        ? App\Conversation::statusCodeToName($status_id)
-                                        : ($status_id ? ucfirst(App\Conversation::$statuses[$status_id] ?? '') : '');
-                                    $status_class = App\Conversation::$status_classes[$status_id] ?? 'default';
+                                    $status_name = (string)($r['status_name'] ?? '');
+                                    $status_class = (string)($r['status_class'] ?? 'default');
+
+                                    if ($status_name === '') {
+                                        $status_id = (int)($r['status'] ?? 0);
+                                        $state_id = (int)($r['state'] ?? 0);
+                                        $deleted_state = defined('App\Conversation::STATE_DELETED')
+                                            ? (int)constant('App\Conversation::STATE_DELETED')
+                                            : 3;
+
+                                        if ($state_id > 0 && $state_id === $deleted_state) {
+                                            $status_name = __('adamsmartsearchui::messages.deleted');
+                                            $status_class = 'danger';
+                                        } else {
+                                            $status_name = method_exists('App\Conversation', 'statusCodeToName')
+                                                ? App\Conversation::statusCodeToName($status_id)
+                                                : ($status_id ? ucfirst(App\Conversation::$statuses[$status_id] ?? '') : '');
+                                            $status_class = App\Conversation::$status_classes[$status_id] ?? 'default';
+                                        }
+                                    }
                                 @endphp
                                 @if ($status_name)
                                     <span class="label label-{{ $status_class }}">{{ $status_name }}</span>

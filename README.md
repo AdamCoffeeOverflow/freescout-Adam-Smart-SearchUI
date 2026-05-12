@@ -5,7 +5,7 @@
 
 Enhanced unified search module for FreeScout.
 
-Version: 2.6.1
+Version: 2.6.5
 Author: AdamCoffeeOverflow
 
 ## Features
@@ -20,6 +20,7 @@ Author: AdamCoffeeOverflow
 - Optional status filter (Any / Open / Pending / Closed, etc.)
 - Optional folder filter (auto-hides if folders are not available in your FreeScout DB)
 - Optional assignee filter (including Unassigned) on the Smart Search page
+- Deleted conversations display as Deleted using conversation state, not stale status
 - Mailbox permission-safe filtering
 - Performance-optimized queries
 - Multilingual UI (ships with English + French)

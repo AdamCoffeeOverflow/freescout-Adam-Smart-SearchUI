@@ -16,7 +16,11 @@ class AddIdxConversationsMailboxUpdated extends Migration
 
     public function up()
     {
-        $driver = DB::getDriverName();
+        try {
+            $driver = DB::connection()->getDriverName();
+        } catch (\Throwable $e) {
+            return;
+        }
         if ($driver !== 'mysql') {
             return;
         }
@@ -46,7 +50,11 @@ class AddIdxConversationsMailboxUpdated extends Migration
 
     public function down()
     {
-        $driver = DB::getDriverName();
+        try {
+            $driver = DB::connection()->getDriverName();
+        } catch (\Throwable $e) {
+            return;
+        }
         if ($driver !== 'mysql') {
             return;
         }
