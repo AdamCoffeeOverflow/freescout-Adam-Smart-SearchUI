@@ -419,6 +419,11 @@
           }
 
           var notifLi = navRight.querySelector('li.web-notifications');
+          var navCollapse = document.querySelector('.navbar-collapse');
+          var navMobileTop = navCollapse ? navCollapse.querySelector('ul.nav.navbar-nav') : null;
+          if (!navMobileTop) {
+            navMobileTop = navRight;
+          }
 
           var li = document.createElement('li');
           li.id = 'adamsmartsearchui-inline-li';
@@ -479,17 +484,40 @@
             li.appendChild(form);
           })();
 
-          if (notifLi && notifLi.parentNode === navRight) {
-            // Place it right after notifications
-            if (notifLi.nextSibling) {
-              navRight.insertBefore(li, notifLi.nextSibling);
-            } else {
-              navRight.appendChild(li);
+          function isMobileTopbarLayout() {
+            try {
+              return window.innerWidth <= 767;
+            } catch (e) {
+              return false;
             }
-          } else {
-            // Fallback: prepend to right nav
-            navRight.insertBefore(li, navRight.firstChild);
           }
+
+          function placeInlineSearchItem() {
+            try {
+              if (isMobileTopbarLayout()) {
+                // In the collapsed/mobile navbar, keep Smart Search at the very top
+                // of the menu, above mailbox/manage links and before the right-side items.
+                if (navMobileTop.firstChild !== li) {
+                  navMobileTop.insertBefore(li, navMobileTop.firstChild);
+                }
+                return;
+              }
+
+              if (notifLi && notifLi.parentNode === navRight) {
+                // Desktop: keep it beside notifications, matching the normal topbar flow.
+                if (notifLi.nextSibling !== li) {
+                  navRight.insertBefore(li, notifLi.nextSibling);
+                }
+              } else if (navRight.firstChild !== li) {
+                // Fallback: prepend to right nav.
+                navRight.insertBefore(li, navRight.firstChild);
+              }
+            } catch (e) {
+              try { navRight.insertBefore(li, navRight.firstChild); } catch (e2) {}
+            }
+          }
+
+          placeInlineSearchItem();
 
           // Autosuggest dropdown (lightweight).
           try {
@@ -512,21 +540,69 @@
                 });
               }
 
-              // Attach dropdown to the form (not the <li>) so its width matches
-              // the input-group precisely (fixes subtle misalignment in some navbars).
+              // Attach dropdown to <body> instead of the navbar/form.
+              // This avoids dashboard/navbar overflow clipping on mobile and custom themes.
               var dd = document.createElement('div');
-              // Mark as expandable on hover (desktop-only via CSS).
               dd.className = 'dropdown-menu adamsmartsearchui-suggest adamsmartsearchui-suggest-expandable';
               dd.style.display = 'none';
-              formEl.appendChild(dd);
+              dd.setAttribute('role', 'listbox');
+              document.body.appendChild(dd);
 
-              function esc(s) {
-                return (s || '').toString()
-                  .replace(/&/g, '&amp;')
-                  .replace(/</g, '&lt;')
-                  .replace(/>/g, '&gt;')
-                  .replace(/"/g, '&quot;')
-                  .replace(/'/g, '&#039;');
+              function getViewportSize() {
+                return {
+                  w: Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0),
+                  h: Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0)
+                };
+              }
+
+              function positionDd() {
+                try {
+                  var rect = formEl.getBoundingClientRect();
+                  var vp = getViewportSize();
+                  var isMobile = isMobileTopbarLayout();
+                  var margin = isMobile ? 10 : 12;
+                  var gap = isMobile ? 4 : 6;
+                  var baseWidth = Math.round(rect.width || 260);
+                  var expandedWidth = 560;
+                  var left = Math.round(rect.left || margin);
+                  var maxBelow = Math.max(160, vp.h - rect.bottom - margin);
+
+                  if (isMobile) {
+                    baseWidth = Math.max(260, vp.w - (margin * 2));
+                    expandedWidth = baseWidth;
+                    left = margin;
+                    dd.style.left = left + 'px';
+                    dd.style.right = 'auto';
+                  } else {
+                    var maxWidth = Math.max(260, vp.w - (margin * 2));
+                    baseWidth = Math.max(260, Math.min(baseWidth, maxWidth));
+                    expandedWidth = Math.max(baseWidth, Math.min(expandedWidth, maxWidth));
+
+                    // Anchor the right edge to the input group so desktop hover expansion
+                    // grows left, not off-screen to the right. This keeps the body-level
+                    // portal dropdown expandable even though it is positioned outside the navbar.
+                    var rightEdge = Math.round(rect.right || (left + baseWidth));
+                    rightEdge = Math.min(rightEdge, vp.w - margin);
+                    if (rightEdge - expandedWidth < margin) {
+                      rightEdge = Math.min(vp.w - margin, margin + expandedWidth);
+                    }
+
+                    dd.style.left = 'auto';
+                    dd.style.right = Math.max(margin, vp.w - rightEdge) + 'px';
+                  }
+
+                  dd.style.position = 'fixed';
+                  dd.style.top = Math.round(rect.bottom + gap) + 'px';
+                  dd.style.removeProperty('width');
+                  dd.style.setProperty('--adamsmartsearchui-suggest-width', baseWidth + 'px');
+                  dd.style.setProperty('--adamsmartsearchui-suggest-expanded-width', expandedWidth + 'px');
+                  dd.style.maxHeight = Math.min(isMobile ? Math.floor(vp.h * 0.58) : 320, maxBelow) + 'px';
+                } catch (e) {}
+              }
+
+              function showDd() {
+                positionDd();
+                dd.style.display = 'block';
               }
 
               // Magnifier is intentionally NOT a navigation affordance.
@@ -729,7 +805,7 @@
                   return;
                 }
                 dd.appendChild(frag);
-                dd.style.display = 'block';
+                showDd();
                 lastItems = items || [];
                 setActive(-1);
               }
@@ -783,7 +859,7 @@
                   return;
                 }
                 dd.appendChild(frag);
-                dd.style.display = 'block';
+                showDd();
                 lastItems = [];
                 setActive(-1);
               }
@@ -801,7 +877,7 @@
                   extraClass: 'disabled'
                 }));
                 dd.appendChild(frag);
-                dd.style.display = 'block';
+                showDd();
                 lastItems = [];
                 setActive(-1);
               }
@@ -987,7 +1063,7 @@
               // Click-away hide
               document.addEventListener('click', function (ev) {
                 try {
-                  if (!li.contains(ev.target)) {
+                  if (!li.contains(ev.target) && !dd.contains(ev.target)) {
                     hideDd();
                   }
                 } catch (e) {}
@@ -1005,6 +1081,23 @@
                   hideDd();
                 }, 200);
               });
+
+              window.addEventListener('resize', function () {
+                try {
+                  placeInlineSearchItem();
+                  if (dd.style.display === 'block') {
+                    positionDd();
+                  }
+                } catch (e) {}
+              });
+
+              window.addEventListener('scroll', function () {
+                try {
+                  if (dd.style.display === 'block') {
+                    positionDd();
+                  }
+                } catch (e) {}
+              }, true);
             }
           } catch (e) {
             // no-op

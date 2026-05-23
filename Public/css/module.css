@@ -91,23 +91,27 @@
   box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.18);
 }
 
-/* Suggestions dropdown */
+/* Suggestions dropdown
+   Rendered as a body-level portal by JS so dashboard/navbar overflow cannot clip it. */
 .adamsmartsearchui-inline {
   position: relative;
 }
 
-.adamsmartsearchui-inline .adamsmartsearchui-suggest {
-  /* Bootstrap's .dropdown-menu may set left/top; force alignment with our inline form */
-  left: 0 !important;
-  right: 0 !important;
-  top: 100% !important;
-  margin-top: 6px;
+.adamsmartsearchui-suggest {
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 10px;
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.18);
+  left: auto;
+  margin-top: 0;
   max-height: 320px;
   overflow: auto;
   padding: 6px 0;
-  border-radius: 10px;
-  box-shadow: 0 10px 24px rgba(0,0,0,0.16);
-  z-index: 1060; /* above navbar items */
+  position: fixed;
+  right: auto;
+  top: auto;
+  width: var(--adamsmartsearchui-suggest-width, 260px);
+  z-index: 3000;
 }
 
 .adamsmartsearchui-suggest-head {
@@ -199,19 +203,17 @@
    Expands to the LEFT by anchoring the right edge to the input group.
    This improves scannability for long subjects without changing the default footprint. */
 @media (min-width: 992px) {
-  .adamsmartsearchui-inline .adamsmartsearchui-suggest.adamsmartsearchui-suggest-expandable:hover {
-    left: auto !important;
-    right: 0 !important;
-    width: 560px;
+  .adamsmartsearchui-suggest.adamsmartsearchui-suggest-expandable:hover {
     max-width: calc(100vw - 24px);
+    width: var(--adamsmartsearchui-suggest-expanded-width, 560px);
   }
 
-  .adamsmartsearchui-inline .adamsmartsearchui-suggest.adamsmartsearchui-suggest-expandable:hover .adamsmartsearchui-suggest-item {
+  .adamsmartsearchui-suggest.adamsmartsearchui-suggest-expandable:hover .adamsmartsearchui-suggest-item {
     align-items: flex-start;
   }
 
-  .adamsmartsearchui-inline .adamsmartsearchui-suggest.adamsmartsearchui-suggest-expandable:hover .adamsmartsearchui-suggest-row1 .adamsmartsearchui-suggest-subj,
-  .adamsmartsearchui-inline .adamsmartsearchui-suggest.adamsmartsearchui-suggest-expandable:hover .adamsmartsearchui-suggest-row2 {
+  .adamsmartsearchui-suggest.adamsmartsearchui-suggest-expandable:hover .adamsmartsearchui-suggest-row1 .adamsmartsearchui-suggest-subj,
+  .adamsmartsearchui-suggest.adamsmartsearchui-suggest-expandable:hover .adamsmartsearchui-suggest-row2 {
     white-space: normal;
     overflow: visible;
     text-overflow: clip;
@@ -281,16 +283,42 @@ body.theme-dark .adamsmartsearchui-suggest-item:focus {
 
   /* Suggestions: keep them compact on mobile.
      Show just the primary line (ID + Subject) and hide secondary/meta details. */
-  .adamsmartsearchui-inline .adamsmartsearchui-suggest { max-height: 50vh; }
+  .adamsmartsearchui-suggest { max-height: 58vh; }
   .adamsmartsearchui-suggest-item { padding: 10px 12px; }
   .adamsmartsearchui-suggest-row2 { display: none; }
   .adamsmartsearchui-suggest-status { display: none; }
   .adamsmartsearchui-suggest-hint { display: none; }
 }
 
-/* Hide on very small screens to avoid crowding */
+/* Mobile navbar: keep Smart Search visible at the top of the collapsed menu. */
 @media (max-width: 767px) {
-  .adamsmartsearchui-inline { display: none; }
+  .navbar-nav > li#adamsmartsearchui-inline-li,
+  .navbar-nav > li.adamsmartsearchui-inline {
+    clear: both;
+    display: block !important;
+    height: auto;
+    padding: 0 10px;
+    width: 100%;
+  }
+
+  .navbar-nav > li#adamsmartsearchui-inline-li > .adamsmartsearchui-inline-form,
+  .navbar-nav > li.adamsmartsearchui-inline > .adamsmartsearchui-inline-form {
+    border: 0;
+    box-shadow: none;
+    margin: 8px 0 10px;
+    padding: 0;
+    width: 100%;
+  }
+
+  .adamsmartsearchui-inline .input-group {
+    width: 100%;
+  }
+
+  .adamsmartsearchui-suggest {
+    border-radius: 12px;
+    max-height: 58vh;
+    z-index: 4000;
+  }
 }
 
 .adamsmartsearch-results-meta {
