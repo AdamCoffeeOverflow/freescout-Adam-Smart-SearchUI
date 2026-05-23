@@ -5,7 +5,7 @@
 
 Enhanced unified search module for FreeScout.
 
-Version: 2.6.7
+Version: 2.6.8
 Author: AdamCoffeeOverflow
 
 ## Features

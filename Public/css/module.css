@@ -314,10 +314,25 @@ body.theme-dark .adamsmartsearchui-suggest-item:focus {
     width: 100%;
   }
 
-  .adamsmartsearchui-suggest {
+  .adamsmartsearchui-suggest.adamsmartsearchui-suggest-mobile {
     border-radius: 12px;
-    max-height: 58vh;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.16);
+    max-height: 42vh;
+    max-width: calc(100vw - 24px);
+    min-width: 0;
+    overflow-x: hidden;
     z-index: 4000;
+  }
+
+  .adamsmartsearchui-suggest.adamsmartsearchui-suggest-mobile .adamsmartsearchui-suggest-item {
+    align-items: center;
+    min-height: 38px;
+  }
+
+  .adamsmartsearchui-suggest.adamsmartsearchui-suggest-mobile .adamsmartsearchui-suggest-row1 .adamsmartsearchui-suggest-subj {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }
 

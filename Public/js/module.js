@@ -558,19 +558,30 @@
               function positionDd() {
                 try {
                   var rect = formEl.getBoundingClientRect();
+                  var anchorEl = formEl.querySelector('.input-group') || formEl;
+                  var anchorRect = anchorEl.getBoundingClientRect();
                   var vp = getViewportSize();
                   var isMobile = isMobileTopbarLayout();
-                  var margin = isMobile ? 10 : 12;
-                  var gap = isMobile ? 4 : 6;
-                  var baseWidth = Math.round(rect.width || 260);
+                  var margin = isMobile ? 12 : 12;
+                  var gap = isMobile ? 3 : 6;
+                  var baseWidth = Math.round(anchorRect.width || rect.width || 260);
                   var expandedWidth = 560;
-                  var left = Math.round(rect.left || margin);
-                  var maxBelow = Math.max(160, vp.h - rect.bottom - margin);
+                  var left = Math.round(anchorRect.left || rect.left || margin);
+                  var maxBelow = Math.max(isMobile ? 120 : 160, vp.h - rect.bottom - margin);
+
+                  if (dd.classList) {
+                    if (isMobile) {
+                      dd.classList.add('adamsmartsearchui-suggest-mobile');
+                    } else {
+                      dd.classList.remove('adamsmartsearchui-suggest-mobile');
+                    }
+                  }
 
                   if (isMobile) {
-                    baseWidth = Math.max(260, vp.w - (margin * 2));
+                    var mobileMaxWidth = Math.max(220, vp.w - (margin * 2));
+                    baseWidth = Math.max(220, Math.min(baseWidth, mobileMaxWidth));
                     expandedWidth = baseWidth;
-                    left = margin;
+                    left = Math.max(margin, Math.min(left, vp.w - baseWidth - margin));
                     dd.style.left = left + 'px';
                     dd.style.right = 'auto';
                   } else {
@@ -581,7 +592,7 @@
                     // Anchor the right edge to the input group so desktop hover expansion
                     // grows left, not off-screen to the right. This keeps the body-level
                     // portal dropdown expandable even though it is positioned outside the navbar.
-                    var rightEdge = Math.round(rect.right || (left + baseWidth));
+                    var rightEdge = Math.round(anchorRect.right || rect.right || (left + baseWidth));
                     rightEdge = Math.min(rightEdge, vp.w - margin);
                     if (rightEdge - expandedWidth < margin) {
                       rightEdge = Math.min(vp.w - margin, margin + expandedWidth);
@@ -596,7 +607,7 @@
                   dd.style.removeProperty('width');
                   dd.style.setProperty('--adamsmartsearchui-suggest-width', baseWidth + 'px');
                   dd.style.setProperty('--adamsmartsearchui-suggest-expanded-width', expandedWidth + 'px');
-                  dd.style.maxHeight = Math.min(isMobile ? Math.floor(vp.h * 0.58) : 320, maxBelow) + 'px';
+                  dd.style.maxHeight = Math.min(isMobile ? Math.floor(vp.h * 0.42) : 320, maxBelow) + 'px';
                 } catch (e) {}
               }
 
