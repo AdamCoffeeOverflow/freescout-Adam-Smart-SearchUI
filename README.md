@@ -5,7 +5,7 @@
 
 Enhanced unified search module for FreeScout.
 
-Version: 2.6.6
+Version: 2.6.5
 Author: AdamCoffeeOverflow
 
 ## Features
@@ -28,8 +28,7 @@ Author: AdamCoffeeOverflow
 
 ### UI enhancements
 
-- Always-visible topbar search input (next to notifications on desktop, top of collapsed navbar on mobile)
-- Portal-based suggestions dropdown so recent/search results are not clipped by dashboard containers
+- Always-visible topbar search input (next to notifications)
 - Native magnifier hidden by default (configurable)
 - Keyboard shortcut: press `/` to focus the topbar search
 - Lightweight autosuggest dropdown (permission-safe)
