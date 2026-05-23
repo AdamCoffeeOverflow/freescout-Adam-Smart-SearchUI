@@ -419,6 +419,13 @@
           }
 
           var notifLi = navRight.querySelector('li.web-notifications');
+          var isMobileNavbar = function () {
+            try {
+              return window.matchMedia && window.matchMedia('(max-width: 767px)').matches;
+            } catch (e) {
+              return window.innerWidth <= 767;
+            }
+          };
 
           var li = document.createElement('li');
           li.id = 'adamsmartsearchui-inline-li';
@@ -479,15 +486,18 @@
             li.appendChild(form);
           })();
 
-          if (notifLi && notifLi.parentNode === navRight) {
-            // Place it right after notifications
+          if (isMobileNavbar()) {
+            // In collapsed/mobile nav, keep Smart Search at the top of the menu.
+            navRight.insertBefore(li, navRight.firstChild);
+          } else if (notifLi && notifLi.parentNode === navRight) {
+            // Desktop: place it right after notifications.
             if (notifLi.nextSibling) {
               navRight.insertBefore(li, notifLi.nextSibling);
             } else {
               navRight.appendChild(li);
             }
           } else {
-            // Fallback: prepend to right nav
+            // Fallback: prepend to right nav.
             navRight.insertBefore(li, navRight.firstChild);
           }
 
@@ -512,13 +522,48 @@
                 });
               }
 
-              // Attach dropdown to the form (not the <li>) so its width matches
-              // the input-group precisely (fixes subtle misalignment in some navbars).
+              // Attach dropdown to <body> so dashboard/theme overflow containers do not
+              // clip the suggestions background on mobile or custom dashboard layouts.
               var dd = document.createElement('div');
               // Mark as expandable on hover (desktop-only via CSS).
               dd.className = 'dropdown-menu adamsmartsearchui-suggest adamsmartsearchui-suggest-expandable';
               dd.style.display = 'none';
-              formEl.appendChild(dd);
+              dd.setAttribute('data-smartsearch-portal', '1');
+              document.body.appendChild(dd);
+
+              function positionDd() {
+                try {
+                  if (!formEl || !dd || dd.style.display === 'none') {
+                    return;
+                  }
+                  var anchor = formEl.querySelector('.input-group') || formEl;
+                  var rect = anchor.getBoundingClientRect();
+                  var viewportWidth = window.innerWidth || document.documentElement.clientWidth || 0;
+                  var mobile = isMobileNavbar();
+                  var margin = mobile ? 10 : 12;
+                  var right = Math.max(margin, viewportWidth - rect.right);
+                  var width = Math.max(240, rect.width);
+
+                  dd.style.position = 'fixed';
+                  dd.style.top = Math.max(0, rect.bottom + 6) + 'px';
+                  dd.style.width = width + 'px';
+
+                  if (mobile) {
+                    dd.style.left = margin + 'px';
+                    dd.style.right = 'auto';
+                    dd.style.width = Math.max(240, viewportWidth - (margin * 2)) + 'px';
+                  } else {
+                    // Anchor to the right edge so desktop hover expansion grows left.
+                    dd.style.left = 'auto';
+                    dd.style.right = right + 'px';
+                  }
+                } catch (e) {}
+              }
+
+              function showDd() {
+                dd.style.display = 'block';
+                positionDd();
+              }
 
               function esc(s) {
                 return (s || '').toString()
@@ -729,7 +774,7 @@
                   return;
                 }
                 dd.appendChild(frag);
-                dd.style.display = 'block';
+                showDd();
                 lastItems = items || [];
                 setActive(-1);
               }
@@ -783,7 +828,7 @@
                   return;
                 }
                 dd.appendChild(frag);
-                dd.style.display = 'block';
+                showDd();
                 lastItems = [];
                 setActive(-1);
               }
@@ -801,7 +846,7 @@
                   extraClass: 'disabled'
                 }));
                 dd.appendChild(frag);
-                dd.style.display = 'block';
+                showDd();
                 lastItems = [];
                 setActive(-1);
               }
@@ -987,7 +1032,7 @@
               // Click-away hide
               document.addEventListener('click', function (ev) {
                 try {
-                  if (!li.contains(ev.target)) {
+                  if (!li.contains(ev.target) && !dd.contains(ev.target)) {
                     hideDd();
                   }
                 } catch (e) {}
@@ -1005,6 +1050,9 @@
                   hideDd();
                 }, 200);
               });
+
+              window.addEventListener('resize', positionDd);
+              window.addEventListener('scroll', positionDd, true);
             }
           } catch (e) {
             // no-op
