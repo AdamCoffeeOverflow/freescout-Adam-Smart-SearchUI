@@ -110,6 +110,7 @@
   position: fixed;
   right: auto;
   top: auto;
+  width: 260px;
   width: var(--adamsmartsearchui-suggest-width, 260px);
   z-index: 3000;
 }
@@ -205,6 +206,7 @@
 @media (min-width: 992px) {
   .adamsmartsearchui-suggest.adamsmartsearchui-suggest-expandable:hover {
     max-width: calc(100vw - 24px);
+    width: 560px;
     width: var(--adamsmartsearchui-suggest-expanded-width, 560px);
   }
 
@@ -343,3 +345,106 @@ body.theme-dark .adamsmartsearchui-suggest-item:focus {
 .adamsmartsearchui-col-conversation { width: 180px; }
 .adamsmartsearchui-col-field { width: 220px; }
 .adamsmartsearchui-col-status { width: 120px; }
+
+.adamsmartsearchui-bulk-toolbar {
+  align-items: center;
+  background: #f8fafc;
+  border: 1px solid #d9e2ec;
+  border-radius: 4px;
+  display: flex;
+  flex-wrap: wrap;
+  margin: 8px 0 10px;
+  padding: 6px 8px 2px;
+}
+
+.adamsmartsearchui-bulk-toolbar > * {
+  margin: 0 6px 6px 0;
+}
+
+.adamsmartsearchui-bulk-toolbar .checkbox-inline {
+  padding-top: 4px;
+}
+
+.adamsmartsearchui-bulk-toolbar .form-control.input-sm {
+  display: inline-block;
+  max-width: 260px;
+  width: auto;
+}
+
+.adamsmartsearchui-bulk-action {
+  min-width: 160px;
+}
+
+.adamsmartsearchui-bulk-target {
+  display: none;
+}
+
+.adamsmartsearchui-bulk-target-note {
+  flex: 1 1 300px;
+  max-width: 520px !important;
+  min-width: 240px;
+}
+
+.adamsmartsearchui-bulk-count {
+  line-height: 30px;
+  white-space: nowrap;
+}
+
+.adamsmartsearchui-col-check {
+  text-align: center;
+  width: 36px;
+}
+
+.adamsmartsearchui-col-check input[type="checkbox"] {
+  margin: 0;
+}
+
+.adamsmartsearchui-results-wrap {
+  border: 0;
+  margin-bottom: 0;
+  overflow-x: auto;
+}
+
+.adamsmartsearchui-results-table {
+  margin-bottom: 0;
+  min-width: 720px;
+}
+
+body.dark-mode .adamsmartsearchui-bulk-toolbar,
+body.theme-dark .adamsmartsearchui-bulk-toolbar {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+@media (max-width: 767px) {
+  .adamsmartsearchui-bulk-toolbar {
+    align-items: stretch;
+    display: block;
+    padding: 8px 8px 2px;
+  }
+
+  .adamsmartsearchui-bulk-toolbar > * {
+    margin: 0 0 6px;
+  }
+
+  .adamsmartsearchui-bulk-toolbar .form-control.input-sm,
+  .adamsmartsearchui-bulk-toolbar .btn {
+    max-width: none !important;
+    width: 100%;
+  }
+
+  .adamsmartsearchui-bulk-select-visible,
+  .adamsmartsearchui-bulk-count {
+    display: block;
+    width: 100%;
+  }
+
+  .adamsmartsearchui-bulk-target-note {
+    min-width: 0;
+  }
+
+  .adamsmartsearchui-results-table {
+    font-size: 13px;
+    min-width: 680px;
+  }
+}

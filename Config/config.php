@@ -17,6 +17,13 @@ return [
     // Results per page.
     'per_page' => 50,
 
+    // Search published customer messages, agent replies, and internal notes.
+    'search_thread_body' => true,
+
+    // Bulk action safety limits.
+    'bulk_max_selected' => 200,
+    'bulk_note_max_length' => 50000,
+
     // Cache minutes for table existence checks.
     'schema_cache_minutes' => 10,
 ];

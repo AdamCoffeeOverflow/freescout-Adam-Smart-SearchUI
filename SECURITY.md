@@ -1,47 +1,58 @@
 # Security Policy
 
-## Reporting a Vulnerability
+## Supported versions
 
-If you discover a security vulnerability in this FreeScout module, please report it responsibly and **do not open a public GitHub issue**.
+Security and compatibility fixes are applied to the latest release.
 
-Please report security issues by email:
+| Version | Support |
+|---|---|
+| Latest release | Supported |
+| Older releases | Best effort only |
+
+## Reporting a vulnerability
+
+Send security reports privately to:
 
 **adamcoffeeoverflow@gmail.com**
 
-Include the following details:
-- Description of the issue
-- Steps to reproduce
-- Affected version(s)
-- Potential impact
-- Proof of concept (if available)
-- Suggested mitigation (optional)
+Include:
 
-You will receive an acknowledgement within **3–5 business days**.
+- Affected version
+- Reproduction steps
+- Impact
+- Proof of concept when available
+- Suggested mitigation when available
 
-## Responsible Disclosure
+Do not include credentials, customer data, or unrelated personal information.
 
-Please do not publicly disclose the vulnerability until it has been reviewed and addressed.
+## Responsible disclosure
 
-Please:
-- Do not access data that is not your own
-- Do not perform destructive testing
-- Do not exploit the issue beyond what is necessary to demonstrate it
-- Allow reasonable time for a fix
+- Do not open a public issue before review.
+- Do not access data you do not own.
+- Do not perform destructive testing.
+- Limit testing to what is needed to demonstrate the issue.
+- Allow reasonable time for remediation.
 
-## Supported Versions
+## Module safeguards
 
-| Version | Supported |
-|---------|-----------|
-| Latest release | Supported |
-| Older versions | Not guaranteed |
+AdamSmartSearchUI uses the following controls:
 
-Security fixes are typically only applied to the latest version.
+- Authenticated FreeScout routes
+- CSRF-protected bulk POST requests
+- Whitelisted request fields
+- Eloquent / parameterized database queries
+- Escaped Blade and JavaScript text output
+- FreeScout mailbox and conversation policy checks
+- Assigned-only visibility enforcement
+- Per-mailbox assignee validation
+- Deleted-conversation protection for bulk writes
+- Configurable bulk request and note-length limits
+- No hardcoded credentials
+- No FreeScout core modifications
+- CSP-safe event binding without inline handlers
 
-## Scope
+Search results and exact numeric redirects are constrained to mailboxes the current user can access. Bulk actions independently re-check each conversation instead of trusting the result-page selection.
 
-This policy applies only to this module.  
-FreeScout core vulnerabilities should be reported to:
+## FreeScout core issues
 
-https://github.com/freescout-help-desk/freescout/security
-
-Thank you for helping keep this project secure.
+Report FreeScout core vulnerabilities through the FreeScout repository security channel rather than this module's issue tracker.

@@ -3,12 +3,13 @@
 return [
     // Page
     'page_title' => 'Smart Search',
+    'schema_missing' => 'The FreeScout conversations table is unavailable.',
     'heading' => 'Smart Search',
 
     // Form
     'query' => 'Query',
     'query_placeholder' => 'Search conversations, customers, custom fields…',
-    'query_tip' => 'Tip: type #1234 to jump to a conversation (conversation/thread ID).',
+    'query_tip' => 'Tip: #1234 prefers the FreeScout conversation number; plain 1234 prefers the internal conversation ID. Search also checks message and note content.',
 
     'mailbox' => 'Mailbox',
     'all_accessible_mailboxes' => 'All accessible mailboxes',
@@ -39,11 +40,8 @@ return [
 
     // Meta / Results
     'query_too_short' => 'Query is too short.',
+    'total_count' => ':count total',
     'recent_conversations' => 'Recent conversations',
-
-    // Keep HTML count to preserve bold styling in the view.
-    // :count is expected to be HTML (already escaped where constructed).
-    'results_count_html' => '{1} :count result|[2,*] :count results',
     'results_count_text' => '{1} result|[2,*] results',
 
     'showing_on_page' => '(showing :count on this page)',
@@ -52,9 +50,11 @@ return [
     // Table
     'conversation' => 'Conversation',
     'subject' => 'Subject',
+    'no_subject' => '(no subject)',
     'updated' => 'Updated',
 
     // Pager
+    'pagination' => 'Search result pages',
     'prev' => 'Prev',
     'next' => 'Next',
 
@@ -65,5 +65,30 @@ return [
     'suggestions' => 'Suggestions',
     'search_smart_for' => 'Search Smart for “:q”',
     'enter' => 'Enter',
+
+    'bulk_action' => 'Bulk action',
+    'bulk_choose_action' => 'Choose action…',
+    'bulk_assign' => 'Assign selected',
+    'bulk_update_status' => 'Update status',
+    'bulk_add_note' => 'Add internal note',
+    'bulk_choose_assignee' => 'Choose assignee…',
+    'bulk_choose_status' => 'Choose status…',
+    'bulk_note' => 'Internal note',
+    'bulk_note_placeholder' => 'Internal note for selected conversations…',
+    'bulk_apply' => 'Apply',
+    'bulk_processing' => 'Applying…',
+    'bulk_selected_count' => ':count selected',
+    'bulk_select_visible' => 'Select visible conversations',
+    'bulk_select_visible_short' => 'Select visible',
+    'bulk_select_conversation' => 'Select conversation #:id',
+    'bulk_select_required' => 'Select at least one conversation.',
+    'bulk_action_required' => 'Choose a bulk action.',
+    'bulk_assignee_required' => 'Choose an assignee.',
+    'bulk_status_required' => 'Choose a status.',
+    'bulk_note_too_long' => 'The internal note must not exceed :max characters.',
+    'bulk_note_required' => 'Enter an internal note.',
+    'bulk_success' => 'Bulk action completed: :updated updated, :skipped skipped.',
+    'bulk_no_updates' => 'No conversations were updated.',
+    'bulk_failed' => 'Bulk action failed.',
     'recent_searches' => 'Recent searches',
 ];

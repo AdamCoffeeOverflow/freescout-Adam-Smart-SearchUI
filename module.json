@@ -1,16 +1,18 @@
 {
   "name": "AdamSmartSearchUI",
   "alias": "adamsmartsearchui",
-  "description": "Unified search UI (CustomFields compatible) with exact conversation-ID-first lookup, numeric fallback, assignee filtering, and deleted-state badges.",
-  "version": "2.6.8",
+  "description": "Unified FreeScout search with message-content matching, current conversation-number compatibility, permission-safe filters, deleted-state badges, and page-only bulk actions.",
+  "version": "2.7.0",
   "detailsUrl": "https://github.com/AdamCoffeeOverflow/freescout-Adam-Smart-SearchUI/releases",
   "author": "AdamCoffeeOverflow",
-  "authorUrl": "https://github.com/AdamCoffeeOverflow",
+  "authorUrl": "https://adamcoffeeoverflow.com",
   "keywords": [
     "search",
     "ui",
     "customfields",
-    "conversations"
+    "conversations",
+    "bulk-actions",
+    "assignee"
   ],
   "active": 0,
   "order": 100,
