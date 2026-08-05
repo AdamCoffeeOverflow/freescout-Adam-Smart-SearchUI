@@ -37,7 +37,6 @@ class SmartSearchController extends Controller
         $folderId = (int)$request->get('folder_id', 0);
         $assigneeId = (int)$request->get('assignee_id', 0);
         $sort = $this->normalizeSort((string)$request->get('sort', 'updated_desc'));
-        $searchContent = ((string)$request->get('search_content', '') === '1');
 
         $user = Auth::user();
         $mailboxes = $user ? $user->mailboxesCanView(true) : collect();
@@ -93,10 +92,6 @@ class SmartSearchController extends Controller
         if ($fieldId && !$cfOk) {
             $fieldId = 0;
         }
-        if ($fieldId) {
-            // A selected custom field defines an exact search scope.
-            $searchContent = false;
-        }
 
         $fields = [];
         $selectedField = null;
@@ -121,17 +116,6 @@ class SmartSearchController extends Controller
         $results = [];
         $total = 0;
         $mode = 'search';
-        $totalExact = true;
-        $hasMore = false;
-        $contentFallbackUsed = false;
-        $contentSearchTooShort = false;
-        $contentSearchUnavailable = false;
-        $contentSearchAvailable = (bool)config('adamsmartsearchui.search_thread_body', true)
-            && $this->threadsSearchOk();
-        $contentMinQueryLength = max(
-            (int)config('adamsmartsearchui.min_query_len', 2),
-            (int)config('adamsmartsearchui.search_thread_body_min_query_len', 4)
-        );
 
         // Native behavior: if user entered a conversation ID (or thread ID), jump directly to the conversation.
         // FreeScout core routes by conversations.id.
@@ -162,75 +146,20 @@ class SmartSearchController extends Controller
         }
 
         if ($schemaOk && $q !== '' && mb_strlen($q) >= (int)config('adamsmartsearchui.min_query_len', 2)) {
-            if ($searchContent && !$fieldId) {
-                if ($contentSearchAvailable && mb_strlen($q) >= $contentMinQueryLength) {
-                    [$results, $hasMore] = $this->searchThreadBody(
-                        $q,
-                        $allowedMailboxIds,
-                        $mailboxId,
-                        $status,
-                        $folderId,
-                        $assigneeId,
-                        $assignedOnlyUserId,
-                        $page,
-                        $perPage,
-                        $sort
-                    );
-                    $mode = 'content';
-                    $totalExact = false;
-                    $total = (($page - 1) * $perPage) + count($results) + ($hasMore ? 1 : 0);
-                } else {
-                    $mode = 'content';
-                    $totalExact = false;
-                    if (!$contentSearchAvailable) {
-                        $contentSearchUnavailable = true;
-                    } else {
-                        $contentSearchTooShort = true;
-                    }
-                }
-            } else {
-                [$results, $total] = $this->searchFast(
-                    $q,
-                    $allowedMailboxIds,
-                    $mailboxId,
-                    $fieldId,
-                    $status,
-                    $folderId,
-                    $assigneeId,
-                    $assignedOnlyUserId,
-                    $page,
-                    $perPage,
-                    $sort,
-                    true
-                );
-                $mode = 'search';
-
-                $fallbackEnabled = (bool)config('adamsmartsearchui.search_thread_body_fallback', false);
-                if (
-                    $total === 0
-                    && !$fieldId
-                    && $fallbackEnabled
-                    && $contentSearchAvailable
-                    && mb_strlen($q) >= $contentMinQueryLength
-                ) {
-                    [$results, $hasMore] = $this->searchThreadBody(
-                        $q,
-                        $allowedMailboxIds,
-                        $mailboxId,
-                        $status,
-                        $folderId,
-                        $assigneeId,
-                        $assignedOnlyUserId,
-                        $page,
-                        $perPage,
-                        $sort
-                    );
-                    $mode = 'content';
-                    $contentFallbackUsed = true;
-                    $totalExact = false;
-                    $total = (($page - 1) * $perPage) + count($results) + ($hasMore ? 1 : 0);
-                }
-            }
+            [$results, $total] = $this->search(
+                $q,
+                $allowedMailboxIds,
+                $mailboxId,
+                $fieldId,
+                $status,
+                $folderId,
+                $assigneeId,
+                $assignedOnlyUserId,
+                $page,
+                $perPage,
+                $sort
+            );
+            $mode = 'search';
         } elseif ($schemaOk && $q === '') {
             // No query yet: show newest conversations as a useful default.
             [$results, $total] = $this->recent(
@@ -264,14 +193,6 @@ class SmartSearchController extends Controller
             'total' => $total,
             'results' => $results,
             'mode' => $mode,
-            'totalExact' => $totalExact,
-            'hasMore' => $hasMore,
-            'searchContent' => $searchContent,
-            'contentFallbackUsed' => $contentFallbackUsed,
-            'contentSearchTooShort' => $contentSearchTooShort,
-            'contentSearchUnavailable' => $contentSearchUnavailable,
-            'contentSearchAvailable' => $contentSearchAvailable,
-            'contentMinQueryLength' => $contentMinQueryLength,
             'mailboxId' => $mailboxId,
             'fieldId' => $fieldId,
             'status' => $status,
@@ -426,7 +347,7 @@ class SmartSearchController extends Controller
             // Keep it intentionally small and fast.
             $perPage = 8;
             // Always suggest newest first (deterministic UX).
-            [$results, $total] = $this->searchFast(
+            [$results, $total] = $this->search(
                 $q,
                 $allowedMailboxIds,
                 $mailboxId,
@@ -437,8 +358,7 @@ class SmartSearchController extends Controller
                 $assignedOnlyUserId,
                 1,
                 $perPage,
-                'updated_desc',
-                false
+                'updated_desc'
             );
 
             // Optional: hydrate selected custom field value for suggestions.
@@ -1811,7 +1731,7 @@ class SmartSearchController extends Controller
         }
     }
 
-    protected function searchFast(string $q, array $allowedMailboxIds, int $mailboxId, int $fieldId, int $status, int $folderId, int $assigneeId, int $assignedOnlyUserId, int $page, int $perPage, string $sort = 'updated_desc', bool $withCount = true)
+    protected function search(string $q, array $allowedMailboxIds, int $mailboxId, int $fieldId, int $status, int $folderId, int $assigneeId, int $assignedOnlyUserId, int $page, int $perPage, string $sort = 'updated_desc')
     {
         $offset = ($page - 1) * $perPage;
         $like = '%'.$q.'%';
@@ -1825,6 +1745,7 @@ class SmartSearchController extends Controller
         }
         $op = ($driver === 'pgsql') ? 'ILIKE' : 'LIKE';
         $cfOk = $this->customFieldsOk();
+        $cfDefsOk = $this->customFieldDefinitionsOk();
         $orderBy = $this->sortToOrderBy($this->normalizeSort($sort));
 
         $ids = $allowedMailboxIds;
@@ -1925,9 +1846,7 @@ class SmartSearchController extends Controller
                 LIMIT $perPage OFFSET $offset";
 
             $b = array_merge($bindings, $filterBindings, [$fieldId, $like]);
-            return $withCount
-                ? $this->runSearch($countSql, $sql, $b)
-                : $this->runSearchWithoutCount($sql, $b);
+            return $this->runSearch($countSql, $sql, $b);
         }
 
         // Unified search across: custom field values, subject, preview, customer email, customer name, and customer phones JSON.
@@ -1955,9 +1874,27 @@ class SmartSearchController extends Controller
         $whereParts[] = "COALESCE(cu.phones,'') $op ?";
         $searchBindings[] = $like;
 
-        // Message and note bodies are intentionally excluded from the fast path.
-        // Deep content search runs as a separate bounded query when explicitly
-        // requested or when the fast search returns no matches.
+        // Search published content without joining threads into the result set.
+        if ((bool)config('adamsmartsearchui.search_thread_body', true) && $this->threadsSearchOk()) {
+            $publishedState = defined(Thread::class.'::STATE_PUBLISHED')
+                ? (int)constant(Thread::class.'::STATE_PUBLISHED')
+                : 2;
+            $threadTypes = [];
+            foreach (['TYPE_CUSTOMER', 'TYPE_MESSAGE', 'TYPE_NOTE'] as $constantName) {
+                $constant = Thread::class.'::'.$constantName;
+                if (defined($constant)) {
+                    $threadTypes[] = (int)constant($constant);
+                }
+            }
+            $threadTypes = array_values(array_unique(array_filter($threadTypes)));
+            if (count($threadTypes)) {
+                $threadTypePlaceholders = implode(',', array_fill(0, count($threadTypes), '?'));
+                $whereParts[] = "EXISTS (\n                    SELECT 1 FROM threads st\n                    WHERE st.conversation_id = c.id\n                      AND st.state = ?\n                      AND st.type IN ($threadTypePlaceholders)\n                      AND COALESCE(st.body,'') $op ?\n                )";
+                $searchBindings[] = $publishedState;
+                $searchBindings = array_merge($searchBindings, $threadTypes);
+                $searchBindings[] = $like;
+            }
+        }
 
         $whereSql = implode("\n                OR ", $whereParts);
 
@@ -1982,122 +1919,7 @@ class SmartSearchController extends Controller
             LIMIT $perPage OFFSET $offset";
 
         $b = array_merge($bindings, $filterBindings, $searchBindings);
-        return $withCount
-            ? $this->runSearch($countSql, $sql, $b)
-            : $this->runSearchWithoutCount($sql, $b);
-    }
-
-    /**
-     * Search published customer messages, agent replies, and internal notes.
-     *
-     * This deliberately runs outside the fast conversation-field query and
-     * fetches one extra row instead of calculating an exact total.
-     */
-    protected function searchThreadBody(string $q, array $allowedMailboxIds, int $mailboxId, int $status, int $folderId, int $assigneeId, int $assignedOnlyUserId, int $page, int $perPage, string $sort = 'updated_desc')
-    {
-        if (
-            !(bool)config('adamsmartsearchui.search_thread_body', true)
-            || !$this->threadsSearchOk()
-        ) {
-            return [[], false];
-        }
-
-        $ids = $allowedMailboxIds;
-        if ($mailboxId) {
-            $ids = [$mailboxId];
-        }
-        if (!count($ids)) {
-            return [[], false];
-        }
-
-        $driver = null;
-        try {
-            $driver = DB::connection()->getDriverName();
-        } catch (\Throwable $e) {
-            $driver = null;
-        }
-
-        $op = ($driver === 'pgsql') ? 'ILIKE' : 'LIKE';
-        $like = '%'.$q.'%';
-        $in = implode(',', array_fill(0, count($ids), '?'));
-        $orderBy = $this->sortToOrderBy($this->normalizeSort($sort));
-        $offset = ($page - 1) * $perPage;
-        $limit = $perPage + 1;
-
-        $filterSql = '';
-        $filterBindings = [];
-        $statusFilter = $this->buildStatusFilterSql($status);
-        if ($statusFilter['sql'] !== '') {
-            $filterSql .= $statusFilter['sql'];
-            $filterBindings = array_merge($filterBindings, $statusFilter['bindings']);
-        }
-        if ($folderId) {
-            $filterSql .= ' AND c.folder_id = ?';
-            $filterBindings[] = $folderId;
-        }
-        if ($assigneeId === -1) {
-            $filterSql .= ' AND (c.user_id IS NULL OR c.user_id <= 0)';
-        } elseif ($assigneeId > 0) {
-            $filterSql .= ' AND c.user_id = ?';
-            $filterBindings[] = $assigneeId;
-        }
-
-        $visibility = $this->buildAssignedVisibilitySql($assignedOnlyUserId, 'c');
-        $filterSql .= (string)$visibility['sql'];
-        $filterBindings = array_merge($filterBindings, (array)$visibility['bindings']);
-
-        $publishedState = defined(Thread::class.'::STATE_PUBLISHED')
-            ? (int)constant(Thread::class.'::STATE_PUBLISHED')
-            : 2;
-        $threadTypes = [];
-        foreach (['TYPE_CUSTOMER', 'TYPE_MESSAGE', 'TYPE_NOTE'] as $constantName) {
-            $constant = Thread::class.'::'.$constantName;
-            if (defined($constant)) {
-                $threadTypes[] = (int)constant($constant);
-            }
-        }
-        $threadTypes = array_values(array_unique(array_filter($threadTypes)));
-        if (!count($threadTypes)) {
-            return [[], false];
-        }
-
-        $threadTypePlaceholders = implode(',', array_fill(0, count($threadTypes), '?'));
-        $sql = "SELECT DISTINCT c.id, c.subject, c.mailbox_id, c.status, c.state, c.updated_at
-            FROM threads st
-            JOIN conversations c ON c.id = st.conversation_id
-            WHERE c.mailbox_id IN ($in)
-              $filterSql
-              AND st.state = ?
-              AND st.type IN ($threadTypePlaceholders)
-              AND COALESCE(st.body, '') $op ?
-            ORDER BY $orderBy
-            LIMIT ? OFFSET ?";
-
-        $bindings = array_merge(
-            $ids,
-            $filterBindings,
-            [$publishedState],
-            $threadTypes,
-            [$like, $limit, $offset]
-        );
-
-        try {
-            $rows = DB::select($sql, $bindings);
-            $hasMore = count($rows) > $perPage;
-            if ($hasMore) {
-                $rows = array_slice($rows, 0, $perPage);
-            }
-
-            return [$this->mapSearchRows($rows), $hasMore];
-        } catch (\Throwable $e) {
-            try {
-                \Helper::logException($e);
-            } catch (\Throwable $ignored) {
-                // no-op
-            }
-
-            return [[], false];
-        }
+        return $this->runSearch($countSql, $sql, $b);
     }
 
     /**
@@ -2423,9 +2245,21 @@ class SmartSearchController extends Controller
         try {
             $cntRow = DB::select($countSql, $bindings);
             $total = (int)($cntRow[0]->cnt ?? 0);
-            $rows = DB::select($sql, $bindings);
 
-            return [$this->mapSearchRows($rows), $total];
+            $rows = DB::select($sql, $bindings);
+            $results = [];
+            foreach ($rows as $r) {
+                $results[] = [
+                    'id' => (int)$r->id,
+                    'subject' => (string)$r->subject,
+                    'mailbox_id' => (int)$r->mailbox_id,
+                    'status' => (int)$r->status,
+                    'state' => isset($r->state) ? (int)$r->state : 0,
+                    'updated_at' => (string)$r->updated_at,
+                ];
+            }
+
+            return [$results, $total];
         } catch (\Throwable $e) {
             // Fail-safe: return no results, never crash UI.
             try {
@@ -2435,40 +2269,5 @@ class SmartSearchController extends Controller
             }
             return [[], 0];
         }
-    }
-
-    protected function runSearchWithoutCount(string $sql, array $bindings)
-    {
-        try {
-            $rows = DB::select($sql, $bindings);
-            $results = $this->mapSearchRows($rows);
-
-            return [$results, count($results)];
-        } catch (\Throwable $e) {
-            try {
-                \Helper::logException($e);
-            } catch (\Throwable $ignored) {
-                // no-op
-            }
-
-            return [[], 0];
-        }
-    }
-
-    protected function mapSearchRows(array $rows)
-    {
-        $results = [];
-        foreach ($rows as $r) {
-            $results[] = [
-                'id' => (int)$r->id,
-                'subject' => (string)$r->subject,
-                'mailbox_id' => (int)$r->mailbox_id,
-                'status' => (int)$r->status,
-                'state' => isset($r->state) ? (int)$r->state : 0,
-                'updated_at' => (string)$r->updated_at,
-            ];
-        }
-
-        return $results;
     }
 }

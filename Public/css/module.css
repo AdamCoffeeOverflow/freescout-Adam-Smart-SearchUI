@@ -342,21 +342,6 @@ body.theme-dark .adamsmartsearchui-suggest-item:focus {
   margin: 15px 0;
 }
 
-.adamsmartsearchui-content-search-option {
-  font-weight: 600;
-  margin-bottom: 2px;
-  padding-top: 0;
-}
-
-.adamsmartsearchui-content-search-help {
-  margin: 2px 0 8px;
-}
-
-.adamsmartsearchui-content-fallback-label {
-  margin-left: 6px;
-  vertical-align: middle;
-}
-
 .adamsmartsearchui-col-conversation { width: 180px; }
 .adamsmartsearchui-col-field { width: 220px; }
 .adamsmartsearchui-col-status { width: 120px; }

@@ -47,7 +47,6 @@ AdamSmartSearchUI uses the following controls:
 - Per-mailbox assignee validation
 - Deleted-conversation protection for bulk writes
 - Configurable bulk request and note-length limits
-- Deep message-content search is isolated from navbar suggestions, requires a minimum query length, and avoids exact full-table counts
 - No hardcoded credentials
 - No FreeScout core modifications
 - CSP-safe event binding without inline handlers

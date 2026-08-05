@@ -9,11 +9,7 @@ return [
     // Form
     'query' => 'Requête',
     'query_placeholder' => 'Rechercher des conversations, clients, champs personnalisés…',
-    'query_tip' => 'Astuce : #1234 privilégie le numéro de conversation FreeScout; 1234 privilégie l’ID interne. La recherche rapide vérifie d’abord les champs de conversation.',
-    'search_message_content' => 'Rechercher dans les messages et les notes internes',
-    'content_search_help' => 'La recherche approfondie du contenu s’exécute séparément et exige au moins :min caractères. Elle peut être plus lente sur les très grandes installations.',
-    'content_search_custom_field_disabled' => 'La recherche approfondie du contenu est indisponible lorsqu’un champ personnalisé précis est sélectionné.',
-    'content_search_unavailable' => 'La recherche dans le contenu des messages est indisponible sur cette installation.',
+    'query_tip' => 'Astuce : #1234 privilégie le numéro de conversation FreeScout; 1234 privilégie l’ID interne. La recherche vérifie aussi le contenu des messages et des notes.',
 
     'mailbox' => 'Boîte',
     'all_accessible_mailboxes' => 'Toutes les boîtes accessibles',
@@ -44,13 +40,9 @@ return [
 
     // Meta / Results
     'query_too_short' => 'La requête est trop courte.',
-    'content_query_too_short' => 'Les recherches dans le contenu des messages exigent au moins :min caractères.',
     'total_count' => ':count au total',
     'recent_conversations' => 'Conversations récentes',
     'results_count_text' => '{1} résultat|[2,*] résultats',
-    'content_results' => 'Résultats du contenu des messages',
-    'content_total_not_counted' => '(total exact non calculé)',
-    'content_fallback_used' => 'Recherche approfondie automatique',
 
     'showing_on_page' => '(affichage de :count sur cette page)',
     'no_matches' => 'Aucune conversation correspondante trouvée.',
