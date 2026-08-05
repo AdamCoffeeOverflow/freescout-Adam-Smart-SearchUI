@@ -1,123 +1,98 @@
 # AdamSmartSearchUI
 
-Enhanced unified conversation search for FreeScout.
+<p align="center">
+  <img src="Public/img/smartsearchui-v112.png" width="180" alt="AdamSmartSearchUI module icon">
+</p>
 
-**Version:** 2.7.0
-**Author:** AdamCoffeeOverflow
-**License:** AGPL-3.0
+<p align="center">
+  Enhanced unified conversation search for FreeScout.
+</p>
+
+<p align="center">
+  <strong>Version 2.7.1</strong> ·
+  <a href="https://adamcoffeeoverflow.com">AdamCoffeeOverflow</a> ·
+  AGPL-3.0
+</p>
+
+## Overview
+
+AdamSmartSearchUI adds an always-visible navbar search and a dedicated Smart Search workspace without modifying FreeScout core files.
+
+Version 2.7.1 keeps normal searches fast while offering message and internal-note searching as a separate option.
+
+## Screenshots
+
+### Always-visible navbar search
+
+<img width="477" height="68" alt="AdamSmartSearchUI navbar search" src="https://github.com/user-attachments/assets/ac5b5581-0166-45cd-8414-817c7226ea3c">
+
+### Smart Search workspace
+
+<img width="1536" height="1024" alt="AdamSmartSearchUI search workspace" src="https://github.com/user-attachments/assets/2e2e291e-b1b0-4872-b723-0a74ed7a431a">
+
+### Suggestions and recent searches
+
+<img width="468" height="255" alt="AdamSmartSearchUI suggestions dropdown" src="https://github.com/user-attachments/assets/edbad90f-f7fb-4765-9287-bfb79d48d263">
 
 ## Features
 
-### Search
-
-- Always-visible navbar search with permission-safe suggestions
-- Dedicated Smart Search page
-- Subject, preview, customer email, customer name, phone, message, reply, and internal-note search
-- Optional Custom Fields module integration
-- Exact numeric resolution:
-  - `#1234` prefers FreeScout's display conversation number
-  - `1234` prefers the internal conversation ID
-  - thread ID lookup remains available as a fallback
-  - failed numeric lookups continue into normal text search
-- Mailbox, custom field, sort, status, folder, and assignee filters
-- Deleted conversations use `conversation.state` and display a red **Deleted** badge
-- Recent results when the search query is empty
-
-### Bulk actions
-
-Select visible Smart Search results and:
-
-- Assign or unassign conversations
-- Update conversation status
-- Add the same internal note to selected conversations
-
-Bulk actions:
-
-- Use POST + CSRF protection
-- Re-check each conversation through FreeScout's update policy
-- Skip deleted or inaccessible conversations
-- Validate assignees against each mailbox's assignable-user list
-- Support assignment extensions such as Teams through FreeScout's assignable-user hooks
-- Limit each request to a configurable maximum
-
-### UI
-
-- Compact Bootstrap 3 interface
-- Desktop suggestion hover expansion
-- Mobile-constrained suggestion dropdown
-- Responsive result table
-- Keyboard shortcut: `/` focuses navbar search
+- Conversation ID, number, subject, and preview search
+- Customer name, email, and phone search
+- Optional Custom Fields search
+- Optional message, reply, and internal-note search
+- Mailbox, status, folder, and assignee filters
+- Deleted-conversation display
+- Always-visible navbar search with suggestions
+- Page-based bulk assignment, status, and internal-note actions
+- Responsive desktop and mobile interface
 - English and French translations
-- Dark-theme-friendly styling
 
-## v2.7.0
+## What changed in 2.7.1
 
-Release-candidate compatibility and cleanup pass based on v2.6.9.
-
-- Preserved the working v2.6.8 navbar and mobile dropdown behavior
-- Preserved the page-only bulk action workflow from v2.6.9
-- Restored and hardened message/note body searching
-- Aligned assigned-only visibility with current FreeScout policy behavior
-- Secured exact numeric redirects with FreeScout authorization checks
-- Added current conversation-number support while retaining internal-ID behavior
-- Updated assignee loading to use FreeScout's assignable-user extension surface
-- Corrected folder loading to use FreeScout folder types instead of a nonexistent name column
-- Improved MySQL, PostgreSQL, and SQLite query compatibility
-- Added a safe cross-database performance-index migration
-- Improved mobile result-table and bulk-toolbar behavior
-- Cleaned provider bootstrapping, translations, validation, and logging
+- Fixed the search slowdown introduced in v2.7.0
+- Separated fast search from message and internal-note searching
+- Kept navbar suggestions on the fast search path
+- Added **Search inside messages and internal notes**
+- Restored README screenshots
 
 ## Compatibility
 
 - FreeScout 1.8.211 or newer recommended
-- Source-reviewed against the current FreeScout `dist` branch
-- PHP 7.1+ syntax
-- Laravel 5.5-compatible
-- Bootstrap 3 + jQuery frontend
-- MySQL, PostgreSQL, and SQLite-aware search queries
-- Custom Fields module is optional
-- Teams and other assignment modules can extend FreeScout's standard assignment hooks
+- PHP 7.1-compatible syntax
+- Laravel 5.5-compatible APIs
+- Bootstrap 3 and jQuery
+- Custom Fields module optional
 
 No FreeScout core files are modified.
 
 ## Installation
 
-1. Extract the archive.
+1. Download and extract the release archive.
 2. Upload the `AdamSmartSearchUI` folder to:
 
-   `Modules/AdamSmartSearchUI`
+   ```text
+   Modules/AdamSmartSearchUI
+   ```
 
 3. Activate the module under **Manage → Modules**.
-4. Rebuild and clear caches:
+4. Clear caches if required:
 
-```bash
-php artisan freescout:build
-php artisan freescout:module-build
-php artisan view:clear
-php artisan cache:clear
-php artisan config:clear
-```
+   ```bash
+   php artisan freescout:build
+   php artisan freescout:module-build
+   php artisan view:clear
+   php artisan cache:clear
+   php artisan config:clear
+   ```
 
-The module loads its optional performance-index migration during activation.
+The module can also be updated from **Manage → Modules** when an update is available.
 
-## Configuration
+## Support
 
-Edit `Config/config.php` before deployment when needed:
+- Website: [adamcoffeeoverflow.com](https://adamcoffeeoverflow.com)
+- Releases: [GitHub releases](https://github.com/AdamCoffeeOverflow/freescout-Adam-Smart-SearchUI/releases)
+- Issues: [GitHub issues](https://github.com/AdamCoffeeOverflow/freescout-Adam-Smart-SearchUI/issues)
 
-- `show_topbar`
-- `use_core_search_icon`
-- `hide_core_search_icon`
-- `min_query_len`
-- `per_page`
-- `search_thread_body`
-- `bulk_max_selected`
-- `bulk_note_max_length`
-- `schema_cache_minutes`
+## License
 
-## Update notes
-
-Replace the existing module folder with the new release package, reactivate if required, and run the cache/build commands above.
-
-## Security
-
-See [SECURITY.md](SECURITY.md) for reporting instructions and implementation safeguards.
+AdamSmartSearchUI is released under the [GNU Affero General Public License v3.0](LICENSE).

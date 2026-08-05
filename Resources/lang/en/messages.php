@@ -9,7 +9,11 @@ return [
     // Form
     'query' => 'Query',
     'query_placeholder' => 'Search conversations, customers, custom fields…',
-    'query_tip' => 'Tip: #1234 prefers the FreeScout conversation number; plain 1234 prefers the internal conversation ID. Search also checks message and note content.',
+    'query_tip' => 'Tip: #1234 prefers the FreeScout conversation number; plain 1234 prefers the internal conversation ID. Fast search checks conversation fields first.',
+    'search_message_content' => 'Search inside messages and internal notes',
+    'content_search_help' => 'Deep content search runs separately and requires at least :min characters. It may be slower on very large installations.',
+    'content_search_custom_field_disabled' => 'Deep content search is unavailable while a specific custom field is selected.',
+    'content_search_unavailable' => 'Message-content search is unavailable on this installation.',
 
     'mailbox' => 'Mailbox',
     'all_accessible_mailboxes' => 'All accessible mailboxes',
@@ -40,9 +44,13 @@ return [
 
     // Meta / Results
     'query_too_short' => 'Query is too short.',
+    'content_query_too_short' => 'Message-content searches require at least :min characters.',
     'total_count' => ':count total',
     'recent_conversations' => 'Recent conversations',
     'results_count_text' => '{1} result|[2,*] results',
+    'content_results' => 'Message-content results',
+    'content_total_not_counted' => '(exact total not calculated)',
+    'content_fallback_used' => 'Deep fallback',
 
     'showing_on_page' => '(showing :count on this page)',
     'no_matches' => 'No matching conversations found.',
