@@ -100,6 +100,25 @@
 
                 <div class="form-group">
                     <div class="col-sm-offset-2 col-sm-10">
+                        <label class="checkbox-inline adamsmartsearchui-content-search-option">
+                            <input
+                                type="checkbox"
+                                name="search_content"
+                                value="1"
+                                @if(!empty($searchContent)) checked @endif
+                                @if(empty($contentSearchAvailable) || !empty($fieldId)) disabled @endif
+                            >
+                            {{ __('adamsmartsearchui::messages.search_message_content') }}
+                        </label>
+                        <p class="help-block adamsmartsearchui-content-search-help">
+                            @if (!empty($fieldId))
+                                {{ __('adamsmartsearchui::messages.content_search_custom_field_disabled') }}
+                            @elseif (empty($contentSearchAvailable))
+                                {{ __('adamsmartsearchui::messages.content_search_unavailable') }}
+                            @else
+                                {{ __('adamsmartsearchui::messages.content_search_help', ['min' => $contentMinQueryLength]) }}
+                            @endif
+                        </p>
                         <button type="submit" class="btn btn-primary">{{ __('adamsmartsearchui::messages.search') }}</button>
                     </div>
                 </div>
@@ -111,11 +130,32 @@
         <div class="alert alert-warning">{{ __('adamsmartsearchui::messages.query_too_short') }}</div>
     @endif
 
+    @if (!empty($contentSearchTooShort))
+        <div class="alert alert-warning">
+            {{ __('adamsmartsearchui::messages.content_query_too_short', ['min' => $contentMinQueryLength]) }}
+        </div>
+    @endif
+
+    @if (!empty($contentSearchUnavailable))
+        <div class="alert alert-warning">{{ __('adamsmartsearchui::messages.content_search_unavailable') }}</div>
+    @endif
+
     @if (!$error && ($q || ($mode ?? '') === 'recent'))
         <div class="adamsmartsearch-results-meta">
             @if (($mode ?? '') === 'recent')
                 <strong>{{ __('adamsmartsearchui::messages.recent_conversations') }}</strong>
                 <span class="text-muted">&mdash; {{ __('adamsmartsearchui::messages.total_count', ['count' => $total]) }}</span>
+            @elseif (($mode ?? '') === 'content')
+                <strong>{{ __('adamsmartsearchui::messages.content_results') }}</strong>
+                <span class="text-muted">
+                    &mdash; {{ __('adamsmartsearchui::messages.showing_on_page', ['count' => count($results)]) }}
+                    {{ __('adamsmartsearchui::messages.content_total_not_counted') }}
+                </span>
+                @if (!empty($contentFallbackUsed))
+                    <span class="label label-info adamsmartsearchui-content-fallback-label">
+                        {{ __('adamsmartsearchui::messages.content_fallback_used') }}
+                    </span>
+                @endif
             @else
                 <strong>{{ $total }}</strong> {{ trans_choice('adamsmartsearchui::messages.results_count_text', (int)$total) }}
                 @if ($total > 0)
@@ -314,7 +354,9 @@
 
                 @php
                     $hasPrev = $page > 1;
-                    $hasNext = ($page * $perPage) < $total;
+                    $hasNext = !empty($totalExact)
+                        ? (($page * $perPage) < $total)
+                        : !empty($hasMore);
                     $base = request()->except('page');
                 @endphp
                 <nav class="adamsmartsearch-pager" aria-label="{{ __('adamsmartsearchui::messages.pagination') }}">

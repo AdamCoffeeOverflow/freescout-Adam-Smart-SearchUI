@@ -17,8 +17,15 @@ return [
     // Results per page.
     'per_page' => 50,
 
-    // Search published customer messages, agent replies, and internal notes.
+    // Allow deep searching of published customer messages, agent replies,
+    // and internal notes. Deep search is isolated from the fast search path.
     'search_thread_body' => true,
+
+    // Automatically try deep content search only when fast search has no matches.
+    'search_thread_body_fallback' => false,
+
+    // Minimum query length for deep message-content searching.
+    'search_thread_body_min_query_len' => 4,
 
     // Bulk action safety limits.
     'bulk_max_selected' => 200,
