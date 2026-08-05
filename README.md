@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <strong>Version 2.7.1</strong> ·
+  <strong>Version 2.7.2</strong> ·
   <a href="https://adamcoffeeoverflow.com">AdamCoffeeOverflow</a> ·
   AGPL-3.0
 </p>
@@ -18,7 +18,7 @@
 
 AdamSmartSearchUI adds an always-visible navbar search and a dedicated Smart Search workspace without modifying FreeScout core files.
 
-Version 2.7.1 keeps normal searches fast while offering message and internal-note searching as a separate option.
+Version 2.7.2 keeps the v2.7.1 split-search performance improvements and corrects navbar suggestion styling when Windows or the browser uses dark mode while FreeScout remains in its light theme.
 
 ## Screenshots
 
@@ -47,13 +47,12 @@ Version 2.7.1 keeps normal searches fast while offering message and internal-not
 - Responsive desktop and mobile interface
 - English and French translations
 
-## What changed in 2.7.1
+## What changed in 2.7.2
 
-- Fixed the search slowdown introduced in v2.7.0
-- Separated fast search from message and internal-note searching
-- Kept navbar suggestions on the fast search path
-- Added **Search inside messages and internal notes**
-- Restored README screenshots
+- Prevented the operating-system/browser dark preference from darkening only the Smart Search dropdown while FreeScout remains light
+- Added explicit light-theme text, heading, hover, focus, and keyboard-active contrast
+- Improved the existing FreeScout dark-theme dropdown states, including active keyboard selection
+- No database migration and no search-behavior changes
 
 ## Compatibility
 

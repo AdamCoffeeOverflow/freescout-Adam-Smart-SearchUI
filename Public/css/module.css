@@ -102,6 +102,7 @@
   border: 1px solid rgba(0, 0, 0, 0.12);
   border-radius: 10px;
   box-shadow: 0 14px 34px rgba(15, 23, 42, 0.18);
+  color: #333;
   left: auto;
   margin-top: 0;
   max-height: 320px;
@@ -116,9 +117,9 @@
 }
 
 .adamsmartsearchui-suggest-head {
+  color: #667085;
   padding: 6px 12px;
   font-size: 12px;
-  opacity: 0.7;
 }
 
 .adamsmartsearchui-suggest-sep {
@@ -127,7 +128,10 @@
   background: rgba(0,0,0,0.08);
 }
 
-.adamsmartsearchui-suggest-item {
+.adamsmartsearchui-suggest-item,
+.adamsmartsearchui-suggest-item:link,
+.adamsmartsearchui-suggest-item:visited {
+  color: #333;
   display: flex;
   gap: 8px;
   padding: 7px 12px;
@@ -139,6 +143,7 @@
 .adamsmartsearchui-suggest-item:hover,
 .adamsmartsearchui-suggest-item:focus,
 .adamsmartsearchui-suggest-item.active {
+  color: #222;
   text-decoration: none;
   background: rgba(0, 0, 0, 0.05);
 }
@@ -226,54 +231,59 @@
 /* Highlight matched fragments in suggestions/results (kept subtle and theme-friendly). */
 .adamsmartsearchui-hl {
   background: rgba(255, 235, 59, 0.55);
+  color: inherit;
   padding: 0 1px;
   border-radius: 3px;
 }
 
-@media (prefers-color-scheme: dark) {
-  .adamsmartsearchui-hl {
-    background: rgba(255, 235, 59, 0.25);
-  }
-}
-
+/*
+ * Theme compatibility
+ *
+ * Do not use prefers-color-scheme here. Windows/browser dark mode must not
+ * darken only this body-level dropdown while FreeScout itself remains light.
+ * Dark styling follows FreeScout/theme-owned classes instead.
+ */
 body.dark-mode .adamsmartsearchui-hl,
 body.theme-dark .adamsmartsearchui-hl {
-  background: rgba(255, 235, 59, 0.25);
-}
-
-/* Dark-mode friendliness: prefer system theme, and also support a future body class */
-@media (prefers-color-scheme: dark) {
-  .adamsmartsearchui-suggest {
-    background: #2b2f35;
-    border-color: rgba(255, 255, 255, 0.12);
-  }
-
-  .adamsmartsearchui-suggest-item {
-    color: rgba(255, 255, 255, 0.92);
-  }
-
-  .adamsmartsearchui-suggest-item:hover,
-  .adamsmartsearchui-suggest-item:focus {
-    background: rgba(255, 255, 255, 0.08);
-  }
+  background: rgba(255, 235, 59, 0.28);
+  color: #fff7ae;
 }
 
 body.dark-mode .adamsmartsearchui-suggest,
 body.theme-dark .adamsmartsearchui-suggest {
   background: #2b2f35;
-  border-color: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.42);
+  color: rgba(255, 255, 255, 0.94);
+}
+
+body.dark-mode .adamsmartsearchui-suggest-head,
+body.theme-dark .adamsmartsearchui-suggest-head {
+  color: rgba(255, 255, 255, 0.68);
+}
+
+body.dark-mode .adamsmartsearchui-suggest-sep,
+body.theme-dark .adamsmartsearchui-suggest-sep {
+  background: rgba(255, 255, 255, 0.12);
 }
 
 body.dark-mode .adamsmartsearchui-suggest-item,
-body.theme-dark .adamsmartsearchui-suggest-item {
-  color: rgba(255, 255, 255, 0.92);
+body.dark-mode .adamsmartsearchui-suggest-item:link,
+body.dark-mode .adamsmartsearchui-suggest-item:visited,
+body.theme-dark .adamsmartsearchui-suggest-item,
+body.theme-dark .adamsmartsearchui-suggest-item:link,
+body.theme-dark .adamsmartsearchui-suggest-item:visited {
+  color: rgba(255, 255, 255, 0.94);
 }
 
 body.dark-mode .adamsmartsearchui-suggest-item:hover,
 body.dark-mode .adamsmartsearchui-suggest-item:focus,
+body.dark-mode .adamsmartsearchui-suggest-item.active,
 body.theme-dark .adamsmartsearchui-suggest-item:hover,
-body.theme-dark .adamsmartsearchui-suggest-item:focus {
-  background: rgba(255, 255, 255, 0.08);
+body.theme-dark .adamsmartsearchui-suggest-item:focus,
+body.theme-dark .adamsmartsearchui-suggest-item.active {
+  background: rgba(255, 255, 255, 0.10);
+  color: #fff;
 }
 
 /* Tighten on smaller screens */
