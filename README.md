@@ -1,15 +1,15 @@
 # AdamSmartSearchUI
 
 <p align="center">
-  <img src="Public/img/smartsearchui-v112.png" width="180" alt="AdamSmartSearchUI module icon">
+  <img src="Public/img/smartsearchui.png" width="180" alt="AdamSmartSearchUI module icon">
 </p>
 
 <p align="center">
-  Fast, permission-safe unified conversation search for FreeScout.
+  Enhanced unified conversation search for FreeScout.
 </p>
 
 <p align="center">
-  <strong>Version 2.7.1</strong> ·
+  <strong>Version 2.8.1</strong> ·
   <a href="https://adamcoffeeoverflow.com">AdamCoffeeOverflow</a> ·
   AGPL-3.0
 </p>
@@ -18,7 +18,7 @@
 
 AdamSmartSearchUI adds an always-visible navbar search and a dedicated Smart Search workspace without modifying FreeScout core files.
 
-The default search path is optimized for everyday lookups across conversation and customer data. Full message, reply, and internal-note searching remains available as a separate deep-search option so large FreeScout installations are not forced to scan thread bodies during every search.
+Version 2.8.1 is the FreeScout 1.8.233 compatibility and source-reverification release. The 2.8.0 security, privacy, search-bound, wildcard, throttling, and bulk-truthfulness hardening remains intact; the FreeScout contracts used by Smart Search were rechecked against the exact 1.8.233 source before this release.
 
 ## Screenshots
 
@@ -30,96 +30,51 @@ The default search path is optimized for everyday lookups across conversation an
 
 <img width="1536" height="1024" alt="AdamSmartSearchUI search workspace" src="https://github.com/user-attachments/assets/2e2e291e-b1b0-4872-b723-0a74ed7a431a">
 
-### Permission-safe suggestions and recent searches
+### Suggestions and recent searches
 
 <img width="468" height="255" alt="AdamSmartSearchUI suggestions dropdown" src="https://github.com/user-attachments/assets/edbad90f-f7fb-4765-9287-bfb79d48d263">
 
-> The screenshots show the established Smart Search interface. Version 2.7.1 also adds the **Search inside messages and internal notes** option to the search filters.
-
 ## Features
 
-### Fast default search
-
-Searches the following without scanning every stored thread body:
-
-- Conversation subject and latest preview
-- Customer email, first name, last name, full name, and phone data
-- Optional Custom Fields values
-- Conversation ID, display number, and thread ID resolution
-- Numeric references that appear in normal searchable fields
-
-### Optional deep-content search
-
-Enable **Search inside messages and internal notes** when a term may appear only inside:
-
-- Published customer messages
-- Published agent replies
-- Published internal notes
-
-Deep search is isolated from the normal query path, requires a configurable minimum query length, and uses bounded next-page detection instead of an expensive exact result count.
-
-### Filters and result controls
-
-- Mailbox
-- Custom field
-- Status
-- Folder
-- Assignee, including unassigned
-- Updated-date sorting
-- Recent conversations when the query is empty
-- Deleted-state detection using `conversation.state`
-
-### Exact numeric behavior
-
-- `#1234` prefers FreeScout's displayed conversation number
-- `1234` prefers the internal conversation ID
-- Thread ID lookup remains available as a fallback
-- A failed exact lookup continues into normal text search
-- Every direct conversation result is checked against FreeScout authorization before redirecting
-
-### Page-only bulk actions
-
-Select visible Smart Search results and:
-
-- Assign or unassign conversations
-- Update conversation status
-- Add the same internal note to selected conversations
-
-Bulk operations use CSRF protection, validate bounded input, re-check each conversation through FreeScout authorization, verify assignable users per mailbox, and skip inaccessible or deleted conversations.
-
-### Interface
-
-- Bootstrap 3 and jQuery
-- Always-visible desktop navbar search
-- Mobile-constrained suggestions dropdown
-- Responsive results table and bulk toolbar
-- `/` keyboard shortcut to focus navbar search
+- Conversation ID, number, subject, and preview search
+- Customer name, email, and phone search
+- Optional Custom Fields search
+- Optional message, reply, and internal-note search
+- Mailbox, status, folder, and assignee filters
+- Deleted-conversation display
+- Always-visible navbar search with suggestions
+- Page-based bulk assignment, status, and internal-note actions
+- Responsive desktop and mobile interface
 - English and French translations
-- Dark-theme-friendly module styling
 
-## What changed in 2.7.1
+## What changed in 2.8.1
 
-Version 2.7.1 is a performance-focused split-search release:
+- Reverified Smart Search against FreeScout 1.8.233 (`9492779dfc83fde23073f7faa7d0d44700581f15`)
+- Confirmed assigned-only core search still enforces `conversations.user_id = current user`
+- Confirmed FreeScout's `sqlEscapeLike()` contract, route throttling, CSRF/CSP web middleware, layout asset hooks, assignee lookup, conversation-number helper, and bulk save/event ordering remain compatible
+- Preserved all 2.8.0 authorization, privacy, wildcard, pagination, throttling, invalid-ID, and post-commit truthfulness protections
+- No database schema change and no new migration
 
-- Restored the fast default query path for normal searches
-- Moved message, reply, and internal-note matching into a separate deep query
-- Added **Search inside messages and internal notes**
-- Kept navbar suggestions on the fast path only
-- Removed exact total counting from deep searches
-- Added bounded `page size + 1` pagination for deep results
-- Added an optional zero-result deep-search fallback, disabled by default
-- Preserved v2.7.0 permissions, filters, deleted-state badges, and bulk actions
+## 2.8.0 hardening retained
+
+- Matched the prior FreeScout 1.8.232 assigned-only search authorization exactly (`conversations.user_id = current user`)
+- Prevented `%` and `_` from acting as implicit SQL wildcards in user search text
+- Added maximum query-length and deep-page bounds
+- Added authenticated throttling to the search workspace, suggestions, custom-field metadata, recent metadata, and bulk mutation endpoints
+- Made bulk assignment/status/note outcomes truthful when persistence succeeds but a later hook/event fails
+- Added developer diagnostics for post-save bulk side-effect failures without logging exception messages, SQL, bindings, customer text, or message content
+- Scoped recent-search localStorage to the authenticated user and removed the old browser-global history keys
+- Preserved PostgreSQL-safe numeric normalization and the existing invalid/undefined ID defenses
+- Streamlined the public release package while preserving all runtime files and user-facing documentation
+- No new database migration; the existing optional `(mailbox_id, updated_at)` index migration is unchanged
 
 ## Compatibility
 
-- Source-reviewed against FreeScout 1.8.229
-- FreeScout 1.8.211 or newer recommended
+- FreeScout 1.8.233 target baseline (`9492779dfc83fde23073f7faa7d0d44700581f15`)
 - PHP 7.1-compatible syntax
 - Laravel 5.5-compatible APIs
-- Bootstrap 3 and jQuery frontend
-- MySQL, MariaDB, PostgreSQL, and SQLite-aware search handling
+- Bootstrap 3 and jQuery
 - Custom Fields module optional
-- Teams and other assignment extensions supported through FreeScout's assignable-user surface
 
 No FreeScout core files are modified.
 
@@ -133,7 +88,7 @@ No FreeScout core files are modified.
    ```
 
 3. Activate the module under **Manage → Modules**.
-4. Rebuild and clear caches:
+4. Clear caches if required:
 
    ```bash
    php artisan freescout:build
@@ -143,45 +98,9 @@ No FreeScout core files are modified.
    php artisan config:clear
    ```
 
-The module loads its optional cross-database performance-index migration during activation. It can also be updated via Freescout Update function, under Manage > Modules > If an update is available, the ability to update will appear.
+The module can also be updated from **Manage → Modules** when an update is available.
 
-## Updating
-
-Replace the existing `Modules/AdamSmartSearchUI` folder with the new release package, reactivate the module if required, and run the build/cache commands above.
-
-No new database migration was added in version 2.7.1.
-
-## Configuration
-
-Defaults are stored in `Config/config.php`:
-
-| Setting | Purpose |
-|---|---|
-| `show_topbar` | Show the always-visible navbar input |
-| `use_core_search_icon` | Route the core search icon through Smart Search |
-| `hide_core_search_icon` | Hide FreeScout's original search icon |
-| `min_query_len` | Minimum normal-search query length |
-| `per_page` | Results displayed per page |
-| `search_thread_body` | Allow explicit deep-content searching |
-| `search_thread_body_fallback` | Automatically try deep search after zero fast matches |
-| `search_thread_body_min_query_len` | Minimum deep-search query length |
-| `bulk_max_selected` | Maximum conversations in one bulk request |
-| `bulk_note_max_length` | Maximum bulk-note length |
-| `schema_cache_minutes` | Cache duration for schema capability checks |
-
-For large installations, keep `search_thread_body_fallback` disabled unless its performance has been verified against the production database.
-
-## Security and engineering notes
-
-- Mailbox access is applied before search results are returned
-- Assigned-only restrictions are enforced in search queries
-- Exact numeric redirects are authorization-checked
-- Bulk actions perform object-level authorization per conversation
-- State-changing forms use POST and CSRF protection
-- The module does not use `$request->all()`
-- Heavy message-content matching is excluded from navbar autosuggestions
-
-## Support and project links
+## Support
 
 - Website: [adamcoffeeoverflow.com](https://adamcoffeeoverflow.com)
 - Releases: [GitHub releases](https://github.com/AdamCoffeeOverflow/freescout-Adam-Smart-SearchUI/releases)

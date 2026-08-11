@@ -21,7 +21,7 @@ class SmartSearchController extends Controller
     {
         $q = trim((string)$request->get('q', ''));
         $q = $this->sanitizeSearchString($q);
-        $page = max(1, (int)$request->get('page', 1));
+        $page = $this->normalizePage($request->get('page', 1));
         $perPage = (int)config('adamsmartsearchui.per_page', 50);
         if ($perPage < 10) {
             $perPage = 10;
@@ -631,7 +631,7 @@ class SmartSearchController extends Controller
             ]);
         } catch (\Throwable $e) {
             try {
-                \Helper::logException($e);
+                $this->logSafeException($e);
             } catch (\Throwable $ignored) {}
 
             return response()->json([
@@ -686,6 +686,7 @@ class SmartSearchController extends Controller
                 ->get();
 
             $updated = 0;
+            $warnings = 0;
             $skipped = max(0, count($ids) - count($conversations));
             $mailboxIdsToRefresh = [];
 
@@ -701,17 +702,20 @@ class SmartSearchController extends Controller
                         continue;
                     }
 
-                    $changed = false;
+                    $outcome = 'skipped';
                     if ($action === 'assign') {
-                        $changed = $this->applyBulkAssignment($conversation, $user, (int)($data['bulk_assignee_id'] ?? 0));
+                        $outcome = $this->applyBulkAssignment($conversation, $user, (int)($data['bulk_assignee_id'] ?? 0));
                     } elseif ($action === 'status') {
-                        $changed = $this->applyBulkStatus($conversation, $user, (int)($data['bulk_status'] ?? 0));
+                        $outcome = $this->applyBulkStatus($conversation, $user, (int)($data['bulk_status'] ?? 0));
                     } elseif ($action === 'note') {
-                        $changed = $this->applyBulkNote($conversation, $user, (string)($data['bulk_note'] ?? ''), $request);
+                        $outcome = $this->applyBulkNote($conversation, $user, (string)($data['bulk_note'] ?? ''), $request);
                     }
 
-                    if ($changed) {
+                    if ($outcome === 'updated' || $outcome === 'warning') {
                         ++$updated;
+                        if ($outcome === 'warning') {
+                            ++$warnings;
+                        }
                         $mailboxIdsToRefresh[(int)$conversation->mailbox_id] = (int)$conversation->mailbox_id;
                     } else {
                         ++$skipped;
@@ -719,7 +723,7 @@ class SmartSearchController extends Controller
                 } catch (\Throwable $e) {
                     ++$skipped;
                     try {
-                        \Helper::logException($e);
+                        $this->logSafeException($e);
                     } catch (\Throwable $ignored) {}
                 }
             }
@@ -727,16 +731,24 @@ class SmartSearchController extends Controller
             $this->refreshMailboxCounters(array_values($mailboxIdsToRefresh));
 
             if ($updated > 0) {
-                \Session::flash('flash_success_floating', __('adamsmartsearchui::messages.bulk_success', [
-                    'updated' => $updated,
-                    'skipped' => $skipped,
-                ]));
+                if ($warnings > 0) {
+                    \Session::flash('flash_warning_floating', __('adamsmartsearchui::messages.bulk_success_with_warnings', [
+                        'updated' => $updated,
+                        'skipped' => $skipped,
+                        'warnings' => $warnings,
+                    ]));
+                } else {
+                    \Session::flash('flash_success_floating', __('adamsmartsearchui::messages.bulk_success', [
+                        'updated' => $updated,
+                        'skipped' => $skipped,
+                    ]));
+                }
             } else {
                 \Session::flash('flash_error_floating', __('adamsmartsearchui::messages.bulk_no_updates'));
             }
         } catch (\Throwable $e) {
             try {
-                \Helper::logException($e);
+                $this->logSafeException($e);
             } catch (\Throwable $ignored) {}
             \Session::flash('flash_error_floating', __('adamsmartsearchui::messages.bulk_failed'));
         }
@@ -832,24 +844,38 @@ class SmartSearchController extends Controller
     protected function applyBulkAssignment($conversation, $user, int $newUserId)
     {
         if ($newUserId === 0) {
-            return false;
+            return 'skipped';
         }
 
         if ($newUserId !== -1 && !$this->isUserAssignableToMailbox($conversation->mailbox, $newUserId)) {
-            return false;
+            return 'skipped';
         }
 
         $currentUserId = (int)($conversation->user_id ?? 0);
         if ($newUserId === -1) {
             if ($currentUserId <= 0) {
-                return false;
+                return 'skipped';
             }
         } elseif ($currentUserId === $newUserId) {
-            return false;
+            return 'skipped';
         }
 
-        $conversation->changeUser($newUserId, $user);
-        return true;
+        try {
+            $conversation->changeUser($newUserId, $user);
+            return 'updated';
+        } catch (\Throwable $e) {
+            // changeUser() persists before its history/event side effects. If the
+            // durable assignee state is already correct, report a warning rather
+            // than falsely claiming the mutation was skipped.
+            $fresh = Conversation::find((int)$conversation->id);
+            $persistedUserId = $fresh ? (int)($fresh->user_id ?? 0) : 0;
+            $expectedUserId = $newUserId === -1 ? 0 : $newUserId;
+            if ($fresh && $persistedUserId === $expectedUserId) {
+                $this->logBulkPostCommitException($e, 'assign', (int)$conversation->id);
+                return 'warning';
+            }
+            throw $e;
+        }
     }
 
     protected function isUserAssignableToMailbox($mailbox, int $userId)
@@ -888,22 +914,32 @@ class SmartSearchController extends Controller
     protected function applyBulkStatus($conversation, $user, int $newStatus)
     {
         if (!array_key_exists($newStatus, $this->writableStatusOptions())) {
-            return false;
+            return 'skipped';
         }
 
         if ((int)($conversation->status ?? 0) === $newStatus) {
-            return false;
+            return 'skipped';
         }
 
-        $conversation->changeStatus($newStatus, $user);
-        return true;
+        try {
+            $conversation->changeStatus($newStatus, $user);
+            return 'updated';
+        } catch (\Throwable $e) {
+            // changeStatus() saves the conversation before history/events.
+            $fresh = Conversation::find((int)$conversation->id);
+            if ($fresh && (int)$fresh->status === $newStatus) {
+                $this->logBulkPostCommitException($e, 'status', (int)$conversation->id);
+                return 'warning';
+            }
+            throw $e;
+        }
     }
 
     protected function applyBulkNote($conversation, $user, string $noteText, Request $request)
     {
         $noteText = trim($noteText);
         if ($noteText === '' || trim(strip_tags($noteText)) === '') {
-            return false;
+            return 'skipped';
         }
 
         $body = e(str_replace(["\r\n", "\r"], "\n", $noteText));
@@ -931,12 +967,47 @@ class SmartSearchController extends Controller
         \Eventy::action('thread.before_save_from_request', $thread, $hookRequest);
         $thread->save();
 
-        if (class_exists('App\\Events\\UserAddedNote')) {
-            event(new \App\Events\UserAddedNote($conversation, $thread));
+        try {
+            if (class_exists('App\\Events\\UserAddedNote')) {
+                event(new \App\Events\UserAddedNote($conversation, $thread));
+            }
+            \Eventy::action('conversation.note_added', $conversation, $thread);
+            return 'updated';
+        } catch (\Throwable $e) {
+            // The note is already durable at this point. Preserve truthful
+            // result semantics and surface the post-save side-effect failure.
+            $this->logBulkPostCommitException($e, 'note', (int)$conversation->id);
+            return 'warning';
         }
-        \Eventy::action('conversation.note_added', $conversation, $thread);
+    }
 
-        return true;
+    /**
+     * Record diagnostics without persisting exception messages, SQL, bindings,
+     * request content, or other potentially sensitive values.
+     */
+    protected function logSafeException($exception, $context = 'operation')
+    {
+        try {
+            \Log::warning('AdamSmartSearchUI operation failed.', [
+                'context' => (string)$context,
+                'exception_class' => is_object($exception) ? get_class($exception) : 'unknown',
+            ]);
+        } catch (\Throwable $ignored) {
+            // Diagnostics must never change the request outcome.
+        }
+    }
+
+    protected function logBulkPostCommitException($exception, string $action, int $conversationId)
+    {
+        try {
+            \Log::warning('AdamSmartSearchUI bulk mutation persisted but a post-save side effect failed.', [
+                'action' => $action,
+                'conversation_id' => $conversationId,
+                'exception_class' => is_object($exception) ? get_class($exception) : 'unknown',
+            ]);
+        } catch (\Throwable $ignored) {
+            // Do not let diagnostics alter the already-durable mutation result.
+        }
     }
 
     protected function refreshMailboxCounters(array $mailboxIds)
@@ -955,13 +1026,13 @@ class SmartSearchController extends Controller
                     }
                 } catch (\Throwable $e) {
                     try {
-                        \Helper::logException($e);
+                        $this->logSafeException($e);
                     } catch (\Throwable $ignored) {}
                 }
             }
         } catch (\Throwable $e) {
             try {
-                \Helper::logException($e);
+                $this->logSafeException($e);
             } catch (\Throwable $ignored) {}
         }
     }
@@ -980,7 +1051,40 @@ class SmartSearchController extends Controller
             $value = str_replace("\0", '', $value);
         }
 
-        return trim($value);
+        $value = trim($value);
+        $maxLength = (int)config('adamsmartsearchui.max_query_len', 200);
+        $maxLength = max(16, min(1000, $maxLength));
+        if (mb_strlen($value) > $maxLength) {
+            $value = mb_substr($value, 0, $maxLength);
+        }
+
+        return $value;
+    }
+
+    protected function normalizePage($value)
+    {
+        $page = (int)$value;
+        if ($page < 1) {
+            $page = 1;
+        }
+
+        $maxPage = (int)config('adamsmartsearchui.max_page', 1000);
+        $maxPage = max(1, min(10000, $maxPage));
+
+        return min($page, $maxPage);
+    }
+
+    protected function buildLikePattern(string $value)
+    {
+        // Treat SQL wildcard characters as literal user input. This prevents
+        // queries such as "%" from degenerating into an unbounded match-all.
+        if (class_exists('Helper') && method_exists('Helper', 'sqlEscapeLike')) {
+            $value = \Helper::sqlEscapeLike($value, '!');
+        } else {
+            $value = str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $value);
+        }
+
+        return '%'.$value.'%';
     }
 
     protected function rememberSchemaCheck($key, $callback)
@@ -1178,7 +1282,7 @@ class SmartSearchController extends Controller
             return $out;
         } catch (\Throwable $e) {
             try {
-                \Helper::logException($e);
+                $this->logSafeException($e);
             } catch (\Throwable $ignored) {
                 // no-op
             }
@@ -1357,7 +1461,7 @@ class SmartSearchController extends Controller
                             if (isset($field->options) && is_array($field->options)) {
                                 $options = $field->options;
                             } elseif (isset($field->options) && $field->options !== null && $field->options !== '') {
-                                $decoded = \Helper::jsonDecode((string)$field->options, true);
+                                $decoded = json_decode((string)$field->options, true);
                                 if (is_array($decoded)) {
                                     $options = $decoded;
                                 }
@@ -1390,7 +1494,7 @@ class SmartSearchController extends Controller
             foreach ($rows as $r) {
                 $options = [];
                 if (isset($r->options) && $r->options !== null && $r->options !== '') {
-                    $decoded = \Helper::jsonDecode((string)$r->options, true);
+                    $decoded = json_decode((string)$r->options, true);
                     if (is_array($decoded)) {
                         $options = $decoded;
                     }
@@ -1430,7 +1534,7 @@ class SmartSearchController extends Controller
                         if (isset($field->options) && is_array($field->options)) {
                             $options = $field->options;
                         } elseif (isset($field->options) && $field->options !== null && $field->options !== '') {
-                            $decoded = \Helper::jsonDecode((string)$field->options, true);
+                            $decoded = json_decode((string)$field->options, true);
                             if (is_array($decoded)) {
                                 $options = $decoded;
                             }
@@ -1458,7 +1562,7 @@ class SmartSearchController extends Controller
             $options = [];
             if (isset($row->options) && $row->options !== null && $row->options !== '') {
                 // Stored as JSON in the CustomFields module.
-                $decoded = \Helper::jsonDecode((string)$row->options, true);
+                $decoded = json_decode((string)$row->options, true);
                 if (is_array($decoded)) {
                     $options = $decoded;
                 }
@@ -1541,38 +1645,13 @@ class SmartSearchController extends Controller
             $alias = 'c';
         }
 
-        $bindings = [$assignedOnlyUserId];
-        $conditions = [$alias.'.user_id = ?'];
-        if ($this->conversationCreatorColumnOk()) {
-            $conditions[] = $alias.'.created_by_user_id = ?';
-            $bindings[] = $assignedOnlyUserId;
-        }
-
-        $result = [
-            'sql' => ' AND ('.implode(' OR ', $conditions).')',
-            'bindings' => $bindings,
+        // FreeScout 1.8.233 core search forces assigned-only users to
+        // conversations.user_id = current user. Keep this mandatory predicate
+        // non-replaceable so extension hooks cannot widen authorization scope.
+        return [
+            'sql' => ' AND '.$alias.'.user_id = ?',
+            'bindings' => [$assignedOnlyUserId],
         ];
-
-        // Assignment modules may extend this condition without a core edit.
-        try {
-            $filtered = \Eventy::filter(
-                'adamsmartsearchui.assigned_visibility_sql',
-                $result,
-                Auth::user(),
-                $alias
-            );
-            if (is_array($filtered)
-                && isset($filtered['sql'], $filtered['bindings'])
-                && is_string($filtered['sql'])
-                && is_array($filtered['bindings'])
-            ) {
-                $result = $filtered;
-            }
-        } catch (\Throwable $e) {
-            // Keep the safe core condition.
-        }
-
-        return $result;
     }
 
     protected function canViewConversation($conversation, $user = null)
@@ -1814,7 +1893,7 @@ class SmartSearchController extends Controller
     protected function searchFast(string $q, array $allowedMailboxIds, int $mailboxId, int $fieldId, int $status, int $folderId, int $assigneeId, int $assignedOnlyUserId, int $page, int $perPage, string $sort = 'updated_desc', bool $withCount = true)
     {
         $offset = ($page - 1) * $perPage;
-        $like = '%'.$q.'%';
+        $like = $this->buildLikePattern($q);
 
         // Determine LIKE operator by driver.
         $driver = null;
@@ -1871,7 +1950,7 @@ class SmartSearchController extends Controller
             // preview, email, customer data, or custom fields still match.
         }
 
-        $cfExistsSql = $cfOk ? "EXISTS (\n                    SELECT 1 FROM conversation_custom_field ccf\n                    WHERE ccf.conversation_id = c.id\n                      AND ccf.value $op ?\n                )" : "0=1";
+        $cfExistsSql = $cfOk ? "EXISTS (\n                    SELECT 1 FROM conversation_custom_field ccf\n                    WHERE ccf.conversation_id = c.id\n                      AND ccf.value $op ? ESCAPE '!'\n                )" : "0=1";
 
         // Driver-specific concats.
         $fullNameExpr = in_array($driver, ['pgsql', 'sqlite'], true)
@@ -1912,7 +1991,7 @@ class SmartSearchController extends Controller
                 WHERE c.mailbox_id IN ($in)
                   $filterSql
                   AND ccf.custom_field_id = ?
-                  AND ccf.value $op ?";
+                  AND ccf.value $op ? ESCAPE '!'";
 
             $sql = "SELECT DISTINCT c.id, c.subject, c.mailbox_id, c.status, c.state, c.updated_at
                 FROM conversations c
@@ -1920,7 +1999,7 @@ class SmartSearchController extends Controller
                 WHERE c.mailbox_id IN ($in)
                   $filterSql
                   AND ccf.custom_field_id = ?
-                  AND ccf.value $op ?
+                  AND ccf.value $op ? ESCAPE '!'
                 ORDER BY $orderBy
                 LIMIT $perPage OFFSET $offset";
 
@@ -1940,19 +2019,19 @@ class SmartSearchController extends Controller
             $searchBindings[] = $like;
         }
 
-        $whereParts[] = "COALESCE(c.subject,'') $op ?";
+        $whereParts[] = "COALESCE(c.subject,'') $op ? ESCAPE '!'";
         $searchBindings[] = $like;
-        $whereParts[] = "COALESCE(c.preview,'') $op ?";
+        $whereParts[] = "COALESCE(c.preview,'') $op ? ESCAPE '!'";
         $searchBindings[] = $like;
-        $whereParts[] = "COALESCE(c.customer_email,'') $op ?";
+        $whereParts[] = "COALESCE(c.customer_email,'') $op ? ESCAPE '!'";
         $searchBindings[] = $like;
-        $whereParts[] = "COALESCE(cu.first_name,'') $op ?";
+        $whereParts[] = "COALESCE(cu.first_name,'') $op ? ESCAPE '!'";
         $searchBindings[] = $like;
-        $whereParts[] = "COALESCE(cu.last_name,'') $op ?";
+        $whereParts[] = "COALESCE(cu.last_name,'') $op ? ESCAPE '!'";
         $searchBindings[] = $like;
-        $whereParts[] = "$fullNameExpr $op ?";
+        $whereParts[] = "$fullNameExpr $op ? ESCAPE '!'";
         $searchBindings[] = $like;
-        $whereParts[] = "COALESCE(cu.phones,'') $op ?";
+        $whereParts[] = "COALESCE(cu.phones,'') $op ? ESCAPE '!'";
         $searchBindings[] = $like;
 
         // Message and note bodies are intentionally excluded from the fast path.
@@ -2018,7 +2097,7 @@ class SmartSearchController extends Controller
         }
 
         $op = ($driver === 'pgsql') ? 'ILIKE' : 'LIKE';
-        $like = '%'.$q.'%';
+        $like = $this->buildLikePattern($q);
         $in = implode(',', array_fill(0, count($ids), '?'));
         $orderBy = $this->sortToOrderBy($this->normalizeSort($sort));
         $offset = ($page - 1) * $perPage;
@@ -2069,7 +2148,7 @@ class SmartSearchController extends Controller
               $filterSql
               AND st.state = ?
               AND st.type IN ($threadTypePlaceholders)
-              AND COALESCE(st.body, '') $op ?
+              AND COALESCE(st.body, '') $op ? ESCAPE '!'
             ORDER BY $orderBy
             LIMIT ? OFFSET ?";
 
@@ -2091,7 +2170,7 @@ class SmartSearchController extends Controller
             return [$this->mapSearchRows($rows), $hasMore];
         } catch (\Throwable $e) {
             try {
-                \Helper::logException($e);
+                $this->logSafeException($e);
             } catch (\Throwable $ignored) {
                 // no-op
             }
@@ -2429,7 +2508,7 @@ class SmartSearchController extends Controller
         } catch (\Throwable $e) {
             // Fail-safe: return no results, never crash UI.
             try {
-                \Helper::logException($e);
+                $this->logSafeException($e);
             } catch (\Throwable $ignored) {
                 // no-op
             }
@@ -2446,7 +2525,7 @@ class SmartSearchController extends Controller
             return [$results, count($results)];
         } catch (\Throwable $e) {
             try {
-                \Helper::logException($e);
+                $this->logSafeException($e);
             } catch (\Throwable $ignored) {
                 // no-op
             }

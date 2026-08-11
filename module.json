@@ -2,7 +2,7 @@
   "name": "AdamSmartSearchUI",
   "alias": "adamsmartsearchui",
   "description": "Unified FreeScout search with a fast default path, opt-in message-content search, permission-safe filters, deleted-state badges, and page-only bulk actions.",
-  "version": "2.7.1",
+  "version": "2.8.1",
   "detailsUrl": "https://github.com/AdamCoffeeOverflow/freescout-Adam-Smart-SearchUI/releases",
   "author": "AdamCoffeeOverflow",
   "authorUrl": "https://adamcoffeeoverflow.com",
@@ -24,7 +24,7 @@
     "start.php"
   ],
   "requires": [],
-  "img": "/modules/adamsmartsearchui/img/smartsearchui-v112.png",
+  "img": "/modules/adamsmartsearchui/img/smartsearchui.png",
   "latestVersionUrl": "https://raw.githubusercontent.com/AdamCoffeeOverflow/freescout-Adam-Smart-SearchUI/main/version.txt",
   "latestVersionZipUrl": "https://github.com/AdamCoffeeOverflow/freescout-Adam-Smart-SearchUI/releases/latest/download/AdamSmartSearchUI.zip"
 }

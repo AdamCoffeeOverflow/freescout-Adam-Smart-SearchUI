@@ -11,11 +11,13 @@ return [
     // Hide the core magnifier icon.
     'hide_core_search_icon' => true,
 
-    // Minimum query length.
+    // Minimum and maximum normalized query length.
     'min_query_len' => 2,
+    'max_query_len' => 200,
 
-    // Results per page.
+    // Results per page and bounded deep-pagination limit.
     'per_page' => 50,
+    'max_page' => 1000,
 
     // Allow deep searching of published customer messages, agent replies,
     // and internal notes. Deep search is isolated from the fast search path.

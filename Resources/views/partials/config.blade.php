@@ -8,6 +8,7 @@
     data-suggest-url="{{ route('adamsmartsearchui.suggest') }}"
     data-fields-url="{{ route('adamsmartsearchui.fields') }}"
     data-recent-meta-url="{{ route('adamsmartsearchui.recent_meta') }}"
+    data-user-id="{{ (int) Auth::id() }}"
     data-i18n-any-custom-field="{{ __('adamsmartsearchui::messages.any_custom_field') }}"
     data-i18n-loading-fields="{{ __('adamsmartsearchui::messages.loading_fields') }}"
     data-i18n-loading-recent="{{ __('adamsmartsearchui::messages.loading_recent') }}"

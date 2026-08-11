@@ -96,6 +96,7 @@ return [
     'bulk_note_too_long' => 'The internal note must not exceed :max characters.',
     'bulk_note_required' => 'Enter an internal note.',
     'bulk_success' => 'Bulk action completed: :updated updated, :skipped skipped.',
+    'bulk_success_with_warnings' => 'Bulk action completed: :updated updated, :skipped skipped; :warnings update(s) had a post-save side-effect warning.',
     'bulk_no_updates' => 'No conversations were updated.',
     'bulk_failed' => 'Bulk action failed.',
     'recent_searches' => 'Recent searches',

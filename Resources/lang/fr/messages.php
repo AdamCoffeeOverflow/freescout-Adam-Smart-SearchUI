@@ -96,6 +96,7 @@ return [
     'bulk_note_too_long' => 'La note interne ne doit pas dépasser :max caractères.',
     'bulk_note_required' => 'Saisissez une note interne.',
     'bulk_success' => 'Action groupée terminée : :updated mis à jour, :skipped ignoré(s).',
+    'bulk_success_with_warnings' => 'Action groupée terminée : :updated mis à jour, :skipped ignoré(s); :warnings mise(s) à jour ont eu un avertissement après enregistrement.',
     'bulk_no_updates' => 'Aucune conversation n’a été mise à jour.',
     'bulk_failed' => 'Échec de l’action groupée.',
     'recent_searches' => 'Recherches récentes',

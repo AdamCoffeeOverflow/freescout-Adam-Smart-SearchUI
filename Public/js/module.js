@@ -164,7 +164,17 @@
       // v2 stores structured items so we can enrich "recent searches" when we
       // *know* a query led to a real conversation (Option A: confirmed-valid only).
       // Backward compatible with v1 (array of strings).
-      var HISTORY_KEY = 'adam_smart_search_ui_recent_v2';
+      var historyUserId = cfg ? (cfg.getAttribute('data-user-id') || '') : '';
+      var HISTORY_KEY = historyUserId ? ('adam_smart_search_ui_recent_v3:' + historyUserId) : '';
+
+      // v1/v2 used browser-global keys. Remove them rather than migrating them:
+      // their data may belong to a different authenticated user on a shared browser.
+      try {
+        if (window.localStorage) {
+          window.localStorage.removeItem('adam_smart_search_ui_recent_v1');
+          window.localStorage.removeItem('adam_smart_search_ui_recent_v2');
+        }
+      } catch (e) {}
 
       function normalizeHistory(arr) {
         try {
@@ -201,12 +211,8 @@
 
       function loadHistory() {
         try {
-          if (!window.localStorage) return [];
+          if (!window.localStorage || !HISTORY_KEY) return [];
           var raw = window.localStorage.getItem(HISTORY_KEY);
-          // Also read legacy key if present.
-          if (!raw) {
-            raw = window.localStorage.getItem('adam_smart_search_ui_recent_v1');
-          }
           if (!raw) return [];
           var arr = JSON.parse(raw);
           return normalizeHistory(arr);
@@ -217,7 +223,7 @@
 
       function saveHistory(arr) {
         try {
-          if (!window.localStorage) return;
+          if (!window.localStorage || !HISTORY_KEY) return;
           window.localStorage.setItem(HISTORY_KEY, JSON.stringify(arr || []));
         } catch (e) {}
       }
