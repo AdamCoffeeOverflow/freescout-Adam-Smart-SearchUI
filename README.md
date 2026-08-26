@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <strong>Version 2.8.1</strong> ·
+  <strong>Version 2.8.2</strong> ·
   <a href="https://adamcoffeeoverflow.com">AdamCoffeeOverflow</a> ·
   AGPL-3.0
 </p>
@@ -18,7 +18,7 @@
 
 AdamSmartSearchUI adds an always-visible navbar search and a dedicated Smart Search workspace without modifying FreeScout core files.
 
-Version 2.8.1 is the FreeScout 1.8.233 compatibility and source-reverification release. The 2.8.0 security, privacy, search-bound, wildcard, throttling, and bulk-truthfulness hardening remains intact; the FreeScout contracts used by Smart Search were rechecked against the exact 1.8.233 source before this release.
+Version 2.8.2 is the FreeScout 1.8.233 compatibility and source-reverification release. The 2.8.0 security, privacy, search-bound, wildcard, throttling, and bulk-truthfulness hardening remains intact; the FreeScout contracts used by Smart Search were rechecked against the exact 1.8.233 source before this release.
 
 ## Screenshots
 
