@@ -2,7 +2,7 @@
   "name": "AdamSmartSearchUI",
   "alias": "adamsmartsearchui",
   "description": "Unified FreeScout search with a fast default path, opt-in message-content search, permission-safe filters, deleted-state badges, and page-only bulk actions.",
-  "version": "2.8.1",
+  "version": "2.8.2",
   "detailsUrl": "https://github.com/AdamCoffeeOverflow/freescout-Adam-Smart-SearchUI/releases",
   "author": "AdamCoffeeOverflow",
   "authorUrl": "https://adamcoffeeoverflow.com",

@@ -463,9 +463,9 @@
             btnWrap.className = 'input-group-btn';
 
             searchButton.className = 'btn btn-default adamsmartsearchui-search-btn';
-            searchButton.type = 'button';
-            searchButton.setAttribute('aria-label', I18N.focusSearch);
-            searchButton.setAttribute('title', I18N.focusSearch);
+            searchButton.type = 'submit';
+            searchButton.setAttribute('aria-label', I18N.search || 'Search');
+            searchButton.setAttribute('title', I18N.search || 'Search');
             searchIcon.className = 'glyphicon glyphicon-search';
             searchButton.appendChild(searchIcon);
 
@@ -530,7 +530,6 @@
             var formEl = li.querySelector('form.adamsmartsearchui-inline-form');
             var inputEl = li.querySelector('input.adamsmartsearchui-inline-input');
             var moreBtn = li.querySelector('button.adamsmartsearchui-more');
-            var searchBtn = li.querySelector('button.adamsmartsearchui-search-btn');
             if (formEl && inputEl) {
               // "More" always opens the Smart Search page (dumb-proof escape hatch).
               if (moreBtn) {
@@ -622,13 +621,8 @@
                 dd.style.display = 'block';
               }
 
-              // Magnifier is intentionally NOT a navigation affordance.
-              if (searchBtn) {
-                searchBtn.addEventListener('click', function (ev) {
-                  try { ev.preventDefault(); } catch (e) {}
-                  try { inputEl.focus(); } catch (e) {}
-                });
-              }
+              // Magnifier follows the same native GET submit path as Enter.
+              // The server keeps the exact numeric-ticket redirect behavior.
 
               var activeIndex = -1;
               var lastItems = [];
