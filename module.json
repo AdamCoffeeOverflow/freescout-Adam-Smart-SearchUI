@@ -26,5 +26,7 @@
   "requires": [],
   "img": "/modules/adamsmartsearchui/img/smartsearchui.png",
   "latestVersionUrl": "https://raw.githubusercontent.com/AdamCoffeeOverflow/freescout-Adam-Smart-SearchUI/main/version.txt",
-  "latestVersionZipUrl": "https://github.com/AdamCoffeeOverflow/freescout-Adam-Smart-SearchUI/releases/latest/download/AdamSmartSearchUI.zip"
+  "latestVersionZipUrl": "https://github.com/AdamCoffeeOverflow/freescout-Adam-Smart-SearchUI/releases/latest/download/AdamSmartSearchUI.zip",
+  "sha256sumsUrl": "https://github.com/AdamCoffeeOverflow/freescout-Adam-Smart-SearchUI/releases/latest/download/SHA256SUMS",
+  "healthCommand": "adamsmartsearchui:health"
 }

@@ -100,6 +100,27 @@ No FreeScout core files are modified.
 
 The module can also be updated from **Manage → Modules** when an update is available.
 
+## UpdateGuard
+
+[Modules Updates Guard](https://github.com/00MY00/UpdateGuard) can verify this module without a custom integration.
+
+The read-only health check is registered as `adamsmartsearchui:health` (`healthCommand` in `module.json`):
+
+```bash
+php artisan adamsmartsearchui:health
+php artisan adamsmartsearchui:health --json
+```
+
+Exit code 0 means healthy. Exit code 1 means unhealthy. The check does not write, migrate, or contact the network. It confirms the module files, classes, views, routes, a read of `conversations`, and the published CSS/JS symlink.
+
+Release archives are checked with `SHA256SUMS` (`sha256sumsUrl`), in `sha256sum` form:
+
+```text
+<64 hex>  AdamSmartSearchUI.zip
+```
+
+Publishing a GitHub release that already contains `AdamSmartSearchUI.zip` runs `.github/workflows/sha256sums.yml` and attaches `SHA256SUMS` next to that zip. The same workflow can be started manually for an existing tag. Releases published before that workflow was added do not have a checksum until it is run for their tag.
+
 ## Support
 
 - Website: [adamcoffeeoverflow.com](https://adamcoffeeoverflow.com)
