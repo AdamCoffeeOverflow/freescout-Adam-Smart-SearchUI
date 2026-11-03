@@ -1,0 +1,47 @@
+# Attach SHA256SUMS to a GitHub release that already contains AdamSmartSearchUI.zip.
+# UpdateGuard reads sha256sumsUrl from module.json, which points at this asset.
+name: Publish SHA256SUMS
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to hash. Empty uses the latest release.
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+jobs:
+  sha256sums:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Hash the release zip and upload SHA256SUMS
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT_TAG: ${{ github.event_name == 'release' && github.event.release.tag_name || '' }}
+          INPUT_TAG: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag || '' }}
+        run: |
+          set -euo pipefail
+          tag="${INPUT_TAG:-${EVENT_TAG:-}}"
+          if [ -z "$tag" ]; then
+            tag="$(gh release view --json tagName --jq .tagName)"
+          fi
+
+          work="$(mktemp -d)"
+          gh release download "$tag" --pattern AdamSmartSearchUI.zip --dir "$work" --clobber
+          test -f "$work/AdamSmartSearchUI.zip"
+          # sha256sum text mode writes two spaces before the basename. UpdateGuard
+          # looks that basename up against latestVersionZipUrl.
+          (
+            cd "$work"
+            sha256sum AdamSmartSearchUI.zip
+          ) > "$work/SHA256SUMS"
+          grep -Eq '^[a-f0-9]{64}  AdamSmartSearchUI\.zip$' "$work/SHA256SUMS"
+          cat "$work/SHA256SUMS"
+          # --clobber deletes an existing SHA256SUMS before the upload. Re-run the
+          # workflow if that upload fails.
+          gh release upload "$tag" "$work/SHA256SUMS" --clobber
