@@ -473,3 +473,164 @@ body.theme-dark .adamsmartsearchui-bulk-toolbar {
     min-width: 680px;
   }
 }
+
+/*
+ * FreeScout Dark Mode module adds "dm" to <body>. The selectors above only
+ * match body.dark-mode and body.theme-dark, so the official module left the
+ * bulk toolbar, suggestion menu, and striped results in light colors.
+ */
+body.dm .adamsmartsearchui-hl,
+body.dark-mode .adamsmartsearchui-hl,
+body.theme-dark .adamsmartsearchui-hl {
+  background: rgba(255, 235, 59, 0.28);
+  color: #fff7ae;
+}
+
+body.dm .adamsmartsearchui-suggest,
+body.dark-mode .adamsmartsearchui-suggest,
+body.theme-dark .adamsmartsearchui-suggest {
+  background: #1a1a1a;
+  border-color: #2e2e2e;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.42);
+  color: #d4d4d4;
+}
+
+body.dm .adamsmartsearchui-suggest-head,
+body.dark-mode .adamsmartsearchui-suggest-head,
+body.theme-dark .adamsmartsearchui-suggest-head {
+  color: #a8a8a8;
+}
+
+body.dm .adamsmartsearchui-suggest-sep,
+body.dark-mode .adamsmartsearchui-suggest-sep,
+body.theme-dark .adamsmartsearchui-suggest-sep {
+  background: #2e2e2e;
+}
+
+body.dm .adamsmartsearchui-suggest-item,
+body.dm .adamsmartsearchui-suggest-item:link,
+body.dm .adamsmartsearchui-suggest-item:visited,
+body.dark-mode .adamsmartsearchui-suggest-item,
+body.dark-mode .adamsmartsearchui-suggest-item:link,
+body.dark-mode .adamsmartsearchui-suggest-item:visited,
+body.theme-dark .adamsmartsearchui-suggest-item,
+body.theme-dark .adamsmartsearchui-suggest-item:link,
+body.theme-dark .adamsmartsearchui-suggest-item:visited {
+  color: #d4d4d4;
+}
+
+body.dm .adamsmartsearchui-suggest-item:hover,
+body.dm .adamsmartsearchui-suggest-item:focus,
+body.dm .adamsmartsearchui-suggest-item.active,
+body.dark-mode .adamsmartsearchui-suggest-item:hover,
+body.dark-mode .adamsmartsearchui-suggest-item:focus,
+body.dark-mode .adamsmartsearchui-suggest-item.active,
+body.theme-dark .adamsmartsearchui-suggest-item:hover,
+body.theme-dark .adamsmartsearchui-suggest-item:focus,
+body.theme-dark .adamsmartsearchui-suggest-item.active {
+  background: #333333;
+  color: #fff;
+}
+
+body.dm .adamsmartsearchui-bulk-toolbar,
+body.dark-mode .adamsmartsearchui-bulk-toolbar,
+body.theme-dark .adamsmartsearchui-bulk-toolbar {
+  background: #1a1a1a;
+  border-color: #2e2e2e;
+  color: #d4d4d4;
+}
+
+body.dm .adamsmartsearchui-results-table > thead > tr > th,
+body.dm .adamsmartsearchui-results-table > tbody > tr > td,
+body.dark-mode .adamsmartsearchui-results-table > thead > tr > th,
+body.dark-mode .adamsmartsearchui-results-table > tbody > tr > td,
+body.theme-dark .adamsmartsearchui-results-table > thead > tr > th,
+body.theme-dark .adamsmartsearchui-results-table > tbody > tr > td {
+  background-color: #212121;
+  border-color: #2e2e2e;
+  color: #d4d4d4;
+}
+
+body.dm .adamsmartsearchui-results-table > thead > tr > th,
+body.dark-mode .adamsmartsearchui-results-table > thead > tr > th,
+body.theme-dark .adamsmartsearchui-results-table > thead > tr > th {
+  background-color: #191919;
+  color: #a8a8a8;
+}
+
+body.dm .adamsmartsearchui-results-table.table-striped > tbody > tr:nth-of-type(odd) > td,
+body.dark-mode .adamsmartsearchui-results-table.table-striped > tbody > tr:nth-of-type(odd) > td,
+body.theme-dark .adamsmartsearchui-results-table.table-striped > tbody > tr:nth-of-type(odd) > td {
+  background-color: #2a2a2a;
+}
+
+body.dm .adamsmartsearchui-results-table.table-hover > tbody > tr:hover > td,
+body.dark-mode .adamsmartsearchui-results-table.table-hover > tbody > tr:hover > td,
+body.theme-dark .adamsmartsearchui-results-table.table-hover > tbody > tr:hover > td {
+  background-color: #333333;
+  color: #f2f2f2;
+}
+
+body.dm .adamsmartsearchui-results-table > thead > tr > th a,
+body.dm .adamsmartsearchui-results-table > thead > tr > th a:hover,
+body.dm .adamsmartsearchui-results-table > thead > tr > th a:focus,
+body.dark-mode .adamsmartsearchui-results-table > thead > tr > th a,
+body.dark-mode .adamsmartsearchui-results-table > thead > tr > th a:hover,
+body.dark-mode .adamsmartsearchui-results-table > thead > tr > th a:focus,
+body.theme-dark .adamsmartsearchui-results-table > thead > tr > th a,
+body.theme-dark .adamsmartsearchui-results-table > thead > tr > th a:hover,
+body.theme-dark .adamsmartsearchui-results-table > thead > tr > th a:focus {
+  color: #a8a8a8;
+}
+
+body.dm .adamsmartsearchui-results-table a,
+body.dark-mode .adamsmartsearchui-results-table a,
+body.theme-dark .adamsmartsearchui-results-table a {
+  color: #6ea8fe;
+}
+
+body.dm .adamsmartsearchui-results-table a:hover,
+body.dm .adamsmartsearchui-results-table a:focus,
+body.dark-mode .adamsmartsearchui-results-table a:hover,
+body.dark-mode .adamsmartsearchui-results-table a:focus,
+body.theme-dark .adamsmartsearchui-results-table a:hover,
+body.theme-dark .adamsmartsearchui-results-table a:focus {
+  color: #9ec5ff;
+}
+
+body.dm .adamsmartsearch-pager .pager li > a,
+body.dm .adamsmartsearch-pager .pager li > span,
+body.dark-mode .adamsmartsearch-pager .pager li > a,
+body.dark-mode .adamsmartsearch-pager .pager li > span,
+body.theme-dark .adamsmartsearch-pager .pager li > a,
+body.theme-dark .adamsmartsearch-pager .pager li > span {
+  background-color: #1a1a1a;
+  border-color: #2e2e2e;
+  color: #d4d4d4;
+}
+
+body.dm .adamsmartsearch-pager .pager li > a:hover,
+body.dm .adamsmartsearch-pager .pager li > a:focus,
+body.dark-mode .adamsmartsearch-pager .pager li > a:hover,
+body.dark-mode .adamsmartsearch-pager .pager li > a:focus,
+body.theme-dark .adamsmartsearch-pager .pager li > a:hover,
+body.theme-dark .adamsmartsearch-pager .pager li > a:focus {
+  background-color: #333333;
+  color: #fff;
+}
+
+body.dm .adamsmartsearch-pager .pager .disabled > a,
+body.dm .adamsmartsearch-pager .pager .disabled > a:hover,
+body.dm .adamsmartsearch-pager .pager .disabled > a:focus,
+body.dm .adamsmartsearch-pager .pager .disabled > span,
+body.dark-mode .adamsmartsearch-pager .pager .disabled > a,
+body.dark-mode .adamsmartsearch-pager .pager .disabled > a:hover,
+body.dark-mode .adamsmartsearch-pager .pager .disabled > a:focus,
+body.dark-mode .adamsmartsearch-pager .pager .disabled > span,
+body.theme-dark .adamsmartsearch-pager .pager .disabled > a,
+body.theme-dark .adamsmartsearch-pager .pager .disabled > a:hover,
+body.theme-dark .adamsmartsearch-pager .pager .disabled > a:focus,
+body.theme-dark .adamsmartsearch-pager .pager .disabled > span {
+  background-color: #1a1a1a;
+  color: #777777;
+}
